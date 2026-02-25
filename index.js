@@ -1,13 +1,13 @@
 const express = require('express');
+const path = require('path');
 const connectDB = require('./config/database');
 require('dotenv').config();
 
 const app = express();
 
 connectDB();
-
 app.use(express.json());
-
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/customers', require('./routes/customers'));
