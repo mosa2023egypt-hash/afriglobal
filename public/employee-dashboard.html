@@ -1,10 +1,65 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Welcome to the Employee Dashboard</h1>
-    <p>Here you can find all the necessary information regarding employees.</p>
-    <!-- Add more dashboard content here -->
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+    <header>
+        <h1>Welcome to the Employee Dashboard</h1>
+        <div id="user-info">
+            <p>User: <span id="username">John Doe</span></p>
+            <p>Email: <span id="email">john.doe@example.com</span></p>
+        </div>
+    </header>
+    <section>
+        <h2>Permissions</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Read</th>
+                    <th>Write</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Employee Management</td>
+                    <td><input type="checkbox" checked></td>
+                    <td><input type="checkbox" checked></td>
+                    <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                    <td>Reports</td>
+                    <td><input type="checkbox" checked></td>
+                    <td><input type="checkbox"></td>
+                    <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                    <td>Settings</td>
+                    <td><input type="checkbox"></td>
+                    <td><input type="checkbox"></td>
+                    <td><input type="checkbox"></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <script>
+        function logout() {
+            alert('Logging out...');
+            // Add logout functionality here
+        }
+    </script>
 </body>
 </html>
