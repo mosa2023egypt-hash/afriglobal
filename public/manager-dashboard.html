@@ -7,51 +7,38 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="#">Employees</a></li>
-            <li><a href="logout.html">Log Out</a></li>
-        </ul>
-    </nav>
-    <h1>Manager Dashboard</h1>
-    <h2>Add New Employee</h2>
-    <form id="add-employee-form">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
+    <header>
+        <h1>Manager Dashboard</h1>
+    </header>
+    <main>
+        <section id="user-management">
+            <h2>Add User</h2>
+            <form id="add-user-form">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+                <button type="submit">Add User</button>
+            </form>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
+            <h2>Manage Users</h2>
+            <ul id="user-list">
+                <!-- User list will be populated here -->
+            </ul>
+        </section>
 
-        <label for="position">Position:</label>
-        <input type="text" id="position" name="position" required>
+        <section id="department-management">
+            <h2>Add Department</h2>
+            <form id="add-department-form">
+                <label for="department-name">Department Name:</label>
+                <input type="text" id="department-name" required>
+                <button type="submit">Add Department</button>
+            </form>
 
-        <button type="submit">Add Employee</button>
-    </form>
-
-    <h2>Users List</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Position</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>John Doe</td>
-                <td>john@example.com</td>
-                <td>Manager</td>
-            </tr>
-            <tr>
-                <td>Jane Doe</td>
-                <td>jane@example.com</td>
-                <td>Developer</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <script src="app.js"></script>
+            <h2>Manage Departments</h2>
+            <ul id="department-list">
+                <!-- Department list will be populated here -->
+            </ul>
+        </section>
+    </main>
+    <script src="script.js"></script>
 </body>
 </html>
