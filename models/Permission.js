@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const permissionSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     description: String,
@@ -7,5 +6,4 @@ const permissionSchema = new mongoose.Schema({
     actions: [String],
     createdAt: { type: Date, default: Date.now }
 });
-
 module.exports = mongoose.model('Permission', permissionSchema);
