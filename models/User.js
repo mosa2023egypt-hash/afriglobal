@@ -1,29 +1,23 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
+    // Existing fields
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    fullName: String,
-    phone: String,
-    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
-    department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
-    customPermissions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Permission' }],
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+    customPermissions: { type: [String], default: [] }, // New field for custom permissions
+    isActive: { type: Boolean, default: true }, // New field for active status
+}, { timestamps: true });
 
+// Password hashing middleware
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    try {
+    if (this.isModified('password')) {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
     }
+    next();
 });
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+module.exports = User;
