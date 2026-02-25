@@ -1,42 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const Permission = require('../models/Permission');
 
-// إنشاء صلاحية جديدة
-router.post('/create-permission', async (req, res) => {
-    try {
-        const { name, description, module, actions } = req.body;
-        if (!name || !module || !actions || actions.length === 0) {
-            return res.status(400).json({ success: false, message: 'جميع الحقول مطلوبة' });
-        }
-        const exist = await Permission.findOne({ name });
-        if (exist) return res.status(400).json({ success: false, message: 'الصلاحية موجودة' });
-        const permission = new Permission({ name, description, module, actions });
-        await permission.save();
-        res.status(201).json({ success: true, message: 'تم إنشاء الصلاحية', data: { id: permission._id, name, module, actions } });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
+let permissions = [
+    { id: 1, name: 'Read', code: 'READ', category: 'General' },
+    { id: 2, name: 'Write', code: 'WRITE', category: 'General' },
+    { id: 3, name: 'Delete', code: 'DELETE', category: 'General' },
+    { id: 4, name: 'Manage Users', code: 'MANAGE_USERS', category: 'User Management' },
+    { id: 5, name: 'Manage Roles', code: 'MANAGE_ROLES', category: 'Access Control' },
+    { id: 6, name: 'View Reports', code: 'VIEW_REPORTS', category: 'Reports' }
+];
+
+router.get('/', (req, res) => {
+    res.json({ success: true, data: permissions, count: permissions.length });
 });
 
-// جلب جميع الصلاحيات
-router.get('/all-permissions', async (req, res) => {
-    try {
-        const permissions = await Permission.find();
-        res.json({ success: true, count: permissions.length, data: permissions });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+router.post('/', (req, res) => {
+    const { name, code, category, description } = req.body;
+    if (!name || !code) {
+        return res.status(400).json({ success: false, message: 'Name and code are required' });
     }
+    const newPermission = { id: Math.max(...permissions.map(p => p.id), 0) + 1, name, code: code.toUpperCase(), category: category || 'General', description: description || '', isActive: true };
+    permissions.push(newPermission);
+    res.status(201).json({ success: true, message: 'Permission created', data: newPermission });
 });
 
-// جلب صلاحيات حسب القسم
-router.get('/permissions-by-module/:module', async (req, res) => {
-    try {
-        const permissions = await Permission.find({ module: req.params.module });
-        res.json({ success: true, count: permissions.length, data: permissions });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
+router.delete('/:id', (req, res) => {
+    const index = permissions.findIndex(p => p.id === parseInt(req.params.id));
+    if (index === -1) return res.status(404).json({ success: false, message: 'Permission not found' });
+    permissions.splice(index, 1);
+    res.json({ success: true, message: 'Permission deleted' });
 });
 
 module.exports = router;
