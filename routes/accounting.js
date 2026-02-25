@@ -1,36 +1,58 @@
-// Accounting and Financial API Endpoints
+'use strict';
 
-// Example endpoint to get all transactions
-app.get('/api/accounting/transactions', (req, res) => {
-    // Logic to retrieve transactions
-    res.send('List of transactions');
+const express = require('express');
+const router = express.Router();
+
+// In-memory storage for transactions
+a let transactions = [];
+
+// Get all transactions
+router.get('/transactions', (req, res) => {
+    res.json(transactions);
 });
 
-// Example endpoint to get a specific transaction
-app.get('/api/accounting/transactions/:id', (req, res) => {
-    const transactionId = req.params.id;
-    // Logic to retrieve the transaction by ID
-    res.send(`Transaction details for ID: ${transactionId}`);
+// Get single transaction by ID
+router.get('/transactions/:id', (req, res) => {
+    const transaction = transactions.find(t => t.id === parseInt(req.params.id));
+    if (!transaction) return res.status(404).send('Transaction not found.');
+    res.json(transaction);
 });
 
-// Example endpoint to create a new transaction
-app.post('/api/accounting/transactions', (req, res) => {
-    const newTransaction = req.body;
-    // Logic to save the new transaction
-    res.status(201).send('Transaction created');
+// Create transaction
+router.post('/transactions', (req, res) => {
+    const transaction = {
+        id: transactions.length + 1,
+        ...req.body
+    };
+    transactions.push(transaction);
+    res.status(201).json(transaction);
 });
 
-// Example endpoint to update a transaction
-app.put('/api/accounting/transactions/:id', (req, res) => {
-    const transactionId = req.params.id;
-    const updatedTransaction = req.body;
-    // Logic to update the transaction
-    res.send(`Transaction with ID: ${transactionId} updated`);
+// Update transaction
+router.put('/transactions/:id', (req, res) => {
+    const transaction = transactions.find(t => t.id === parseInt(req.params.id));
+    if (!transaction) return res.status(404).send('Transaction not found.');
+
+    Object.assign(transaction, req.body);
+    res.json(transaction);
 });
 
-// Example endpoint to delete a transaction
-app.delete('/api/accounting/transactions/:id', (req, res) => {
-    const transactionId = req.params.id;
-    // Logic to delete the transaction
-    res.send(`Transaction with ID: ${transactionId} deleted`);
+// Delete transaction
+router.delete('/transactions/:id', (req, res) => {
+    const transactionIndex = transactions.findIndex(t => t.id === parseInt(req.params.id));
+    if (transactionIndex === -1) return res.status(404).send('Transaction not found.');
+
+    transactions.splice(transactionIndex, 1);
+    res.status(204).send();
 });
+
+// Financial summary
+router.get('/summary', (req, res) => {
+    const totalIncome = transactions.reduce((sum, t) => sum + (t.type === 'income' ? t.amount : 0), 0);
+    const totalExpense = transactions.reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : 0), 0);
+    const totalTransactions = transactions.length;
+
+    res.json({ totalIncome, totalExpense, totalTransactions });
+});
+
+module.exports = router;
