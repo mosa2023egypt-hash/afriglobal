@@ -1,27 +1,40 @@
 const express = require('express');
+const connectDB = require('./config/database');
+require('dotenv').config();
+
 const app = express();
+
+// الاتصال بقاعدة البيانات
+connectDB();
+
+// Middleware
 app.use(express.json());
-const authRoutes = require('./routes/auth');
-const dashboardRoutes = require('./routes/dashboard');
-const ordersRoutes = require('./routes/orders');
-const suppliersRoutes = require('./routes/suppliers');
-const customersRoutes = require('./routes/customers');
-const warehouseRoutes = require('./routes/warehouse');
-const accountingRoutes = require('./routes/accounting');
-const reportsRoutes = require('./routes/reports');
-app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/orders', ordersRoutes);
-app.use('/api/suppliers', suppliersRoutes);
-app.use('/api/customers', customersRoutes);
-app.use('/api/warehouse', warehouseRoutes);
-app.use('/api/accounting', accountingRoutes);
-app.use('/api/reports', reportsRoutes);
+
+// Routes
+app.use('/api/products', require('./routes/products'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/customers', require('./routes/customers'));
+app.use('/api/suppliers', require('./routes/suppliers'));
+app.use('/api/warehouse', require('./routes/warehouse'));
+app.use('/api/accounting', require('./routes/accounting'));
+app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/reports', require('./routes/reports'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/departments', require('./routes/departments'));
+app.use('/api/permissions', require('./routes/permissions'));
+app.use('/api/roles', require('./routes/roles'));
+
+// Error Handler Middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+    console.error(err.stack);
+    res.status(500).json({ success: false, message: 'حدث خطأ في السيرفر', error: err.message });
 });
+
+// Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`السيرفر يعمل على المنفذ ${PORT}`);
 });
+
+module.exports = app;
