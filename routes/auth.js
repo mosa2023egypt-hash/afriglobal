@@ -1,67 +1,31 @@
+'use strict';
+
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-// Mock database for users
-let users = [];
-
-// Register route
-router.post('/register', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        users.push({ username, password: hashedPassword });
-        res.status(201).json({ message: 'User registered!' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error registering user.' });
-    }
+// Login endpoint
+router.post('/login', (req, res) => {
+    // Logic for logging in a user
 });
 
-// Login route
-router.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const user = users.find(u => u.username === username);
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
-        }
-        const token = jwt.sign({ username }, 'secret', { expiresIn: '1h' });
-        res.json({ token });
-    } catch (error) {
-        res.status(500).json({ message: 'Error logging in.' });
-    }
+// Register endpoint
+router.post('/register', (req, res) => {
+    // Logic for registering a new user
 });
 
-// Verify token route
-router.get('/verify-token', (req, res) => {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.status(403).json({ message: 'No token provided.' });
-    jwt.verify(token, 'secret', (err) => {
-        if (err) return res.status(401).json({ message: 'Invalid token.' });
-        res.json({ message: 'Token is valid.' });
-    });
+// Verify endpoint
+router.get('/verify', (req, res) => {
+    // Logic for verifying a user
 });
 
-// Logout route
+// Logout endpoint
 router.post('/logout', (req, res) => {
-    // Invalidating token logic can go here (e.g., adding to blacklist)
-    res.json({ message: 'Logged out successfully.' });
+    // Logic for logging out a user
 });
 
-// Change password route
-router.post('/change-password', async (req, res) => {
-    try {
-        const { username, oldPassword, newPassword } = req.body;
-        const user = users.find(u => u.username === username);
-        if (!user || !(await bcrypt.compare(oldPassword, user.password))) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
-        }
-        user.password = await bcrypt.hash(newPassword, 10);
-        res.json({ message: 'Password changed successfully!' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error changing password.' });
-    }
+// Change password endpoint
+router.post('/change-password', (req, res) => {
+    // Logic for changing a user's password
 });
 
 module.exports = router;
