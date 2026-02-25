@@ -1,45 +1,31 @@
-// routes/orders.js
-
 const express = require('express');
+const Order = require('../models/Order');
 const router = express.Router();
 
-let orders = []; // This will act as a simple in-memory database
-
-// Create an order
-router.post('/', (req, res) => {
-    const order = req.body;
-    orders.push(order);
-    res.status(201).json(order);
+router.get('/', async (req, res) => {
+    const orders = await Order.find();
+    res.json({ success: true, data: orders });
 });
 
-// Read all orders
-router.get('/', (req, res) => {
-    res.json(orders);
+router.post('/', async (req, res) => {
+    const order = new Order(req.body);
+    await order.save();
+    res.status(201).json({ success: true, data: order });
 });
 
-// Read a single order by ID
-router.get('/:id', (req, res) => {
-    const order = orders.find(o => o.id === parseInt(req.params.id));
-    if (!order) return res.status(404).send('Order not found.');
-    res.json(order);
+router.get('/:id', async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    res.json({ success: true, data: order });
 });
 
-// Update an order
-router.put('/:id', (req, res) => {
-    let order = orders.find(o => o.id === parseInt(req.params.id));
-    if (!order) return res.status(404).send('Order not found.');
-
-    order = {...order, ...req.body};
-    orders[orders.indexOf(orders.find(o => o.id === parseInt(req.params.id)))] = order;
-    res.json(order);
+router.put('/:id', async (req, res) => {
+    const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true, data: order });
 });
 
-// Delete an order
-router.delete('/:id', (req, res) => {
-    const orderIndex = orders.findIndex(o => o.id === parseInt(req.params.id));
-    if (orderIndex === -1) return res.status(404).send('Order not found.');
-    orders.splice(orderIndex, 1);
-    res.status(204).send();
+router.delete('/:id', async (req, res) => {
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
 });
 
 module.exports = router;
