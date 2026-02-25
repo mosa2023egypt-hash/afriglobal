@@ -1,15 +1,8 @@
-// Error handling middleware for the application
+'use strict';
+
 const errorHandler = (err, req, res, next) => {
-    const status = err.statusCode || 500;
-    const message = err.message || 'Something went wrong';
-    console.error(`[ERROR] Status: ${status}, Message: ${message}`);
-    res.status(status).json({ success: false, error: { status: status, message: message } });
+    console.error(err.stack);
+    res.status(500).send({ message: 'Something went wrong!', error: err.message });
 };
 
-const notFoundHandler = (req, res, next) => {
-    const error = new Error(`Not Found - ${req.originalUrl}`);
-    error.statusCode = 404;
-    next(error);
-};
-
-module.exports = { errorHandler, notFoundHandler };
+module.exports = errorHandler;
