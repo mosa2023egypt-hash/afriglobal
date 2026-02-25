@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Role = require('../models/Role');
-const Permission = require('../models/Permission');
 
-// إنشاء دور جديد مع صلاحيات
 router.post('/create-role', async (req, res) => {
     try {
         const { name, description, department, level, permissionIds } = req.body;
@@ -12,14 +10,7 @@ router.post('/create-role', async (req, res) => {
         }
         const exist = await Role.findOne({ name });
         if (exist) return res.status(400).json({ success: false, message: 'الدور موجود' });
-        
-        const role = new Role({
-            name,
-            description,
-            department,
-            level,
-            permissions: permissionIds || []
-        });
+        const role = new Role({ name, description, department, level, permissions: permissionIds || [] });
         await role.save();
         res.status(201).json({ success: true, message: 'تم إنشاء الدور', data: { id: role._id, name, level } });
     } catch (err) {
@@ -27,7 +18,6 @@ router.post('/create-role', async (req, res) => {
     }
 });
 
-// جلب جميع الأدوار
 router.get('/all-roles', async (req, res) => {
     try {
         const roles = await Role.find().populate('permissions').populate('department', 'name');
@@ -37,7 +27,6 @@ router.get('/all-roles', async (req, res) => {
     }
 });
 
-// جلب دور محدد مع صلاحياته
 router.get('/role/:roleId', async (req, res) => {
     try {
         const role = await Role.findById(req.params.roleId).populate('permissions').populate('department');
@@ -48,7 +37,6 @@ router.get('/role/:roleId', async (req, res) => {
     }
 });
 
-// تحديث صلاحيات الدور
 router.put('/update-role-permissions/:roleId', async (req, res) => {
     try {
         const { permissionIds } = req.body;
