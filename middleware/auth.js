@@ -1,35 +1,34 @@
-// auth.js middleware for JWT token verification, role checking, and permission checking
+// auth.js
 
 const jwt = require('jsonwebtoken');
-const secretKey = process.env.JWT_SECRET; // Your secret key for signing tokens
+const secretKey = process.env.JWT_SECRET || 'your-secret-key';
 
-// JWT Token Verification Middleware
+// Middleware to verify JWT token
 function verifyToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1]; // Get token from header
-    if (!token) return res.status(403).send('A token is required for authentication');
-
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) return res.status(403).send('Access denied. No token provided.');
     jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) return res.status(401).send('Invalid Token');
-        req.user = decoded; // Save the decoded user info in request
+        if (err) return res.status(401).send('Invalid token.');
+        req.user = decoded;  // Save decoded user info in request
         next();
     });
 }
 
-// Role Checking Middleware
+// Middleware to check user role
 function checkRole(roles) {
     return (req, res, next) => {
         if (!req.user || !req.user.role || !roles.includes(req.user.role)) {
-            return res.status(403).send('Access denied: insufficient permissions');
+            return res.status(403).send('Access denied. Insufficient role.');
         }
         next();
     };
 }
 
-// Permission Checking Middleware
+// Middleware to check permissions
 function checkPermission(permission) {
     return (req, res, next) => {
         if (!req.user || !req.user.permissions || !req.user.permissions.includes(permission)) {
-            return res.status(403).send('Access denied: insufficient permissions');
+            return res.status(403).send('Access denied. Insufficient permissions.');
         }
         next();
     };
