@@ -4,21 +4,13 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    fullName: { type: String },
-    phone: { type: String },
-    roleLevel: { type: Number },
-    roleName: { type: String },
-    departmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
-    permissions: [{ type: String }],
+    fullName: { type: String, required: true },
+    phone: { type: String, required: true },
+    roleLevel: { type: Number, required: true },
+    roleName: { type: String, required: true },
+    permissions: { type: [String], default: [] },
     isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-userSchema.pre('save', function(next) {
-    this.updatedAt = Date.now();
-    next();
-});
+},{ timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 
