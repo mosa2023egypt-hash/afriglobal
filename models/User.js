@@ -5,13 +5,14 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     fullName: { type: String, required: true },
-    phone: { type: String, required: true },
-    roleLevel: { type: Number, required: true },
-    roleName: { type: String, required: true },
-    permissions: { type: [String], default: [] },
+    phone: { type: String },
+    role: { 
+        type: String, 
+        enum: ['gm', 'sales_manager', 'sales', 'procurement_manager', 'procurement'],
+        required: true 
+    },
     isActive: { type: Boolean, default: true },
-},{ timestamps: true });
+}, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;

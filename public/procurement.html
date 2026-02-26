@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أفريجلوبال - المشتريات</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f4f6f9; direction: rtl; color: #333; }
+        header {
+            background: #1e3a5f; color: white; padding: 14px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 20px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .user-info { font-size: 14px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px; }
+        .btn-logout { background: #c0392b; color: white; }
+        .btn-logout:hover { background: #e74c3c; }
+        .btn-primary { background: #1e3a5f; color: white; }
+        .btn-primary:hover { background: #2d5280; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #2ecc71; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-whatsapp { background: #25d366; color: white; }
+        .tabs { background: white; border-bottom: 2px solid #e0e0e0; padding: 0 24px; display: flex; gap: 4px; }
+        .tab { padding: 14px 20px; cursor: pointer; font-size: 15px; border-bottom: 3px solid transparent; color: #666; }
+        .tab.active { color: #1e3a5f; border-bottom-color: #1e3a5f; font-weight: bold; }
+        .tab-content { display: none; padding: 24px; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #555; }
+        input, select, textarea {
+            width: 100%; padding: 10px 12px; border: 1.5px solid #d0d0d0;
+            border-radius: 6px; font-size: 14px; font-family: inherit; direction: rtl;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #1e3a5f; }
+        textarea { resize: vertical; min-height: 70px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #1e3a5f; color: white; padding: 12px 10px; text-align: right; }
+        td { padding: 11px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        tr:hover td { background: #f8f9fa; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-requested { background: #fff3cd; color: #856404; }
+        .badge-responded { background: #d1ecf1; color: #0c5460; }
+        .badge-accepted { background: #d4edda; color: #155724; }
+        .badge-rejected { background: #f8d7da; color: #721c24; }
+        .sla-ok { color: #27ae60; }
+        .sla-warn { color: #e67e22; }
+        .sla-danger { color: #e74c3c; font-weight: bold; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; }
+        .alert-error { background: #fee; color: #c00; border: 1px solid #fcc; }
+        .alert-success { background: #efe; color: #060; border: 1px solid #cfc; }
+        .section-title { font-size: 18px; font-weight: bold; color: #1e3a5f; margin-bottom: 16px; }
+        .no-data { text-align: center; color: #888; padding: 40px; }
+        .modal-overlay { display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay.open { display:flex; }
+        .modal { background:white; border-radius:10px; padding:28px; max-width:480px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .modal h3 { color:#1e3a5f; margin-bottom:16px; }
+        .modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌍 أفريجلوبال - المشتريات</h1>
+        <div class="header-right">
+            <span class="user-info" id="userInfo"></span>
+            <button class="btn btn-logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('rfqs')">📋 طلبات العروض</div>
+        <div class="tab" onclick="showTab('quotes')">💰 عروض الأسعار</div>
+        <div class="tab" onclick="showTab('suppliers')">🏭 الموردين</div>
+    </div>
+
+    <!-- RFQs Tab (Sales Orders submitted to procurement) -->
+    <div id="tab-rfqs" class="tab-content active">
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="section-title">طلبات تحتاج عروض أسعار</div>
+                <button class="btn btn-primary" onclick="loadRFQs()">🔄 تحديث</button>
+            </div>
+            <div id="rfqsAlert" class="alert"></div>
+            <div id="rfqsTable"><div class="no-data">جاري التحميل...</div></div>
+        </div>
+    </div>
+
+    <!-- Quotes Tab -->
+    <div id="tab-quotes" class="tab-content">
+        <div class="card">
+            <div class="section-title">إضافة عرض سعر مورد</div>
+            <div id="quoteAlert" class="alert"></div>
+            <form id="quoteForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>طلب المبيعات *</label>
+                        <select id="quoteSalesOrder" required>
+                            <option value="">-- اختر الطلب --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المورد *</label>
+                        <select id="quoteSupplier" required>
+                            <option value="">-- اختر المورد --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المنتج</label>
+                        <select id="quoteProduct">
+                            <option value="">-- اختر المنتج --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المنشأ</label>
+                        <select id="quoteOrigin">
+                            <option value="">-- اختر المنشأ --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>الكمية (طن)</label>
+                        <input type="number" id="quoteQty" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ الطلب (للأرشيف)</label>
+                        <input type="datetime-local" id="quoteRequestedAt">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>هاتف المورد</label>
+                        <input type="tel" id="quoteSupplierPhone" placeholder="01xxxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>جهة الاتصال في المورد</label>
+                        <input type="text" id="quoteSupplierContact">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="quoteNotes"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">إرسال طلب عرض السعر</button>
+            </form>
+        </div>
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="section-title">عروض الأسعار</div>
+                <button class="btn btn-primary" onclick="loadQuotes()">🔄 تحديث</button>
+            </div>
+            <div id="quotesTable"><div class="no-data">جاري التحميل...</div></div>
+        </div>
+    </div>
+
+    <!-- Suppliers Tab -->
+    <div id="tab-suppliers" class="tab-content">
+        <div class="card">
+            <div class="section-title">إضافة مورد جديد</div>
+            <div id="supplierAlert" class="alert"></div>
+            <form id="supplierForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>اسم الشركة بالعربي *</label>
+                        <input type="text" id="supNameAr" required>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم الشركة بالإنجليزي</label>
+                        <input type="text" id="supNameEn">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="supPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>جهة الاتصال</label>
+                        <input type="text" id="supContact">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المدينة</label>
+                        <input type="text" id="supCity">
+                    </div>
+                    <div class="form-group">
+                        <label>العنوان</label>
+                        <input type="text" id="supAddress">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="supNotes"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">إرسال للموافقة</button>
+            </form>
+        </div>
+        <div class="card">
+            <div class="section-title">الموردون المعتمدون</div>
+            <div id="suppliersTable"><div class="no-data">جاري التحميل...</div></div>
+        </div>
+    </div>
+
+    <!-- Respond to Quote Modal -->
+    <div id="respondModal" class="modal-overlay">
+        <div class="modal">
+            <h3>تسجيل رد المورد</h3>
+            <input type="hidden" id="respondQuoteId">
+            <div class="form-group">
+                <label>السعر بالطن</label>
+                <input type="number" id="respondPrice" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>تاريخ الرد</label>
+                <input type="datetime-local" id="respondedAt">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات</label>
+                <textarea id="respondNotes"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">إلغاء</button>
+                <button class="btn btn-success" onclick="submitResponse()">حفظ الرد</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let products = [], origins = [], suppliers = [], salesOrders = [];
+
+        if (!token) window.location.href = '/login';
+
+        document.getElementById('userInfo').textContent = `${user.fullName || ''} (${roleLabel(user.role)})`;
+
+        function roleLabel(r) {
+            const m = {gm:'مدير عام',sales_manager:'مدير مبيعات',sales:'مبيعات',procurement_manager:'مدير مشتريات',procurement:'مشتريات'};
+            return m[r] || r;
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+        function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        function showAlert(id, msg, type='error') {
+            const el = document.getElementById(id);
+            el.className = `alert alert-${type}`;
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function showTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            const tabs = ['rfqs','quotes','suppliers'];
+            const idx = tabs.indexOf(name);
+            document.querySelectorAll('.tab')[idx].classList.add('active');
+            document.getElementById(`tab-${name}`).classList.add('active');
+            if (name === 'rfqs') loadRFQs();
+            if (name === 'quotes') { loadQuotesFormData(); loadQuotes(); }
+            if (name === 'suppliers') loadSuppliers();
+        }
+
+        function slaClass(hours) {
+            if (hours < 24) return 'sla-ok';
+            if (hours < 48) return 'sla-warn';
+            return 'sla-danger';
+        }
+
+        async function loadRFQs() {
+            try {
+                const res = await fetch(`${API}/sales-orders`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.success) { showAlert('rfqsAlert', data.message); return; }
+                const orders = (data.data || []).filter(o => o.status === 'submitted_to_procurement');
+                if (!orders.length) {
+                    document.getElementById('rfqsTable').innerHTML = '<div class="no-data">لا توجد طلبات معلقة</div>';
+                    return;
+                }
+                let html = `<table><thead><tr>
+                    <th>رقم الطلب</th><th>مدينة التسليم</th><th>البنود</th>
+                    <th>وقت الانتظار</th><th>ملاحظة</th><th>إجراء</th>
+                </tr></thead><tbody>`;
+                const now = Date.now();
+                for (const o of orders) {
+                    const items = (o.items||[]).map(i => `${i.productNameAr||''} ${i.qtyTons||0} طن`).join('، ');
+                    const submittedAt = o.submittedToProcurementAt ? new Date(o.submittedToProcurementAt) : null;
+                    const elapsed = submittedAt ? Math.round((now - submittedAt.getTime()) / 3600000) : '-';
+                    const cls = typeof elapsed === 'number' ? slaClass(elapsed) : '';
+                    const note = o.customerNote || '';
+                    html += `<tr>
+                        <td><b>${o.orderNumber||'-'}</b></td>
+                        <td>${o.deliveryCity||'-'}</td>
+                        <td>${items||'-'}</td>
+                        <td class="${cls}">${elapsed} ساعة</td>
+                        <td>${note}</td>
+                        <td><button class="btn btn-success btn-sm" onclick="markResponded('${o._id}')">تم الرد</button></td>
+                    </tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('rfqsTable').innerHTML = html;
+            } catch(err) { showAlert('rfqsAlert', 'خطأ في التحميل'); }
+        }
+
+        async function markResponded(id) {
+            if (!confirm('هل تم الرد على هذا الطلب؟')) return;
+            const res = await fetch(`${API}/sales-orders/${id}/procurement-responded`, {
+                method: 'POST', headers: authHeaders()
+            });
+            const data = await res.json();
+            showAlert('rfqsAlert', data.message, data.success ? 'success' : 'error');
+            if (data.success) loadRFQs();
+        }
+
+        async function loadQuotesFormData() {
+            try {
+                const [pRes, oRes, sRes, soRes] = await Promise.all([
+                    fetch(`${API}/approvals/products`, { headers: authHeaders() }),
+                    fetch(`${API}/approvals/origins`, { headers: authHeaders() }),
+                    fetch(`${API}/companies?isSupplier=true`, { headers: authHeaders() }),
+                    fetch(`${API}/sales-orders`, { headers: authHeaders() })
+                ]);
+                const [pD, oD, sD, soD] = await Promise.all([pRes.json(), oRes.json(), sRes.json(), soRes.json()]);
+                products = pD.data || [];
+                origins = oD.data || [];
+                suppliers = sD.data || [];
+                salesOrders = (soD.data || []).filter(o => o.status === 'submitted_to_procurement');
+
+                const pSel = document.getElementById('quoteProduct');
+                pSel.innerHTML = '<option value="">-- اختر المنتج --</option>' +
+                    products.map(p => `<option value="${p._id}" data-name="${p.nameAr}">${p.nameAr}</option>`).join('');
+
+                const oSel = document.getElementById('quoteOrigin');
+                oSel.innerHTML = '<option value="">-- اختر المنشأ --</option>' +
+                    origins.map(o => `<option value="${o._id}" data-name="${o.nameAr}">${o.nameAr}</option>`).join('');
+
+                const sSel = document.getElementById('quoteSupplier');
+                sSel.innerHTML = '<option value="">-- اختر المورد --</option>' +
+                    suppliers.map(s => `<option value="${s._id}">${s.nameAr}</option>`).join('');
+
+                const soSel = document.getElementById('quoteSalesOrder');
+                soSel.innerHTML = '<option value="">-- اختر الطلب --</option>' +
+                    salesOrders.map(o => `<option value="${o._id}">${o.orderNumber} - ${o.deliveryCity||''}</option>`).join('');
+            } catch(err) {}
+        }
+
+        async function loadQuotes() {
+            try {
+                const res = await fetch(`${API}/procurement/quotes`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.success) return;
+                if (!data.data.length) {
+                    document.getElementById('quotesTable').innerHTML = '<div class="no-data">لا توجد عروض أسعار</div>';
+                    return;
+                }
+                let html = `<table><thead><tr>
+                    <th>الطلب</th><th>المورد</th><th>المنتج</th><th>الكمية</th>
+                    <th>السعر/طن</th><th>وقت الاستجابة</th><th>الحالة</th><th>إجراء</th>
+                </tr></thead><tbody>`;
+                for (const q of data.data) {
+                    const so = q.salesOrder ? q.salesOrder.orderNumber : '-';
+                    const sup = q.supplier ? q.supplier.nameAr : '-';
+                    const prod = q.productNameAr || (q.product ? q.product.nameAr : '-');
+                    const waBtn = q.whatsappUrl && q.whatsappUrl !== '#' ?
+                        `<a href="${q.whatsappUrl}" target="_blank" class="btn btn-whatsapp btn-sm">واتساب</a>` : '';
+                    let elapsed = '-';
+                    let cls = '';
+                    if (q.requestedAt) {
+                        const respondedTime = q.respondedAt ? new Date(q.respondedAt).getTime() : Date.now();
+                        const h = Math.round((respondedTime - new Date(q.requestedAt).getTime()) / 3600000);
+                        elapsed = `${h} ساعة`;
+                        if (q.status === 'requested') cls = slaClass(h);
+                    }
+                    const respondBtn = q.status === 'requested' ?
+                        `<button class="btn btn-warning btn-sm" onclick="openRespondModal('${q._id}')">تسجيل رد</button>` : '';
+                    html += `<tr>
+                        <td>${so}</td>
+                        <td>${sup} ${waBtn}</td>
+                        <td>${prod}</td>
+                        <td>${q.qtyTons||'-'} طن</td>
+                        <td>${q.pricePerTon ? q.pricePerTon + ' ج.م' : '-'}</td>
+                        <td class="${cls}">${elapsed}</td>
+                        <td><span class="badge badge-${q.status}">${statusLabel(q.status)}</span></td>
+                        <td>${respondBtn}</td>
+                    </tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('quotesTable').innerHTML = html;
+            } catch(err) {}
+        }
+
+        function statusLabel(s) {
+            const m = {requested:'مطلوب',responded:'تم الرد',accepted:'مقبول',rejected:'مرفوض'};
+            return m[s] || s;
+        }
+
+        document.getElementById('quoteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pSel = document.getElementById('quoteProduct');
+            const oSel = document.getElementById('quoteOrigin');
+            const pOpt = pSel.options[pSel.selectedIndex];
+            const oOpt = oSel.options[oSel.selectedIndex];
+            const payload = {
+                salesOrder: document.getElementById('quoteSalesOrder').value,
+                supplier: document.getElementById('quoteSupplier').value,
+                product: pSel.value || undefined,
+                productNameAr: pOpt ? pOpt.dataset.name : '',
+                origin: oSel.value || undefined,
+                originNameAr: oOpt ? oOpt.dataset.name : '',
+                qtyTons: parseFloat(document.getElementById('quoteQty').value) || undefined,
+                notes: document.getElementById('quoteNotes').value,
+                requestedAt: document.getElementById('quoteRequestedAt').value || undefined,
+                supplierPhone: document.getElementById('quoteSupplierPhone').value,
+                supplierContactPerson: document.getElementById('quoteSupplierContact').value,
+            };
+            try {
+                const res = await fetch(`${API}/procurement/quotes`, {
+                    method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                showAlert('quoteAlert', data.message, data.success ? 'success' : 'error');
+                if (data.success) { document.getElementById('quoteForm').reset(); loadQuotes(); }
+            } catch(err) { showAlert('quoteAlert', 'حدث خطأ'); }
+        });
+
+        function openRespondModal(id) {
+            document.getElementById('respondQuoteId').value = id;
+            document.getElementById('respondPrice').value = '';
+            document.getElementById('respondNotes').value = '';
+            document.getElementById('respondedAt').value = '';
+            document.getElementById('respondModal').classList.add('open');
+        }
+        function closeModal() { document.getElementById('respondModal').classList.remove('open'); }
+
+        async function submitResponse() {
+            const id = document.getElementById('respondQuoteId').value;
+            const payload = {
+                pricePerTon: parseFloat(document.getElementById('respondPrice').value) || undefined,
+                notes: document.getElementById('respondNotes').value,
+                respondedAt: document.getElementById('respondedAt').value || undefined,
+                status: 'responded'
+            };
+            try {
+                const res = await fetch(`${API}/procurement/quotes/${id}`, {
+                    method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) { closeModal(); loadQuotes(); }
+                else alert(data.message);
+            } catch(err) { alert('حدث خطأ'); }
+        }
+
+        async function loadSuppliers() {
+            try {
+                const res = await fetch(`${API}/companies?isSupplier=true`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.success) return;
+                if (!data.data.length) {
+                    document.getElementById('suppliersTable').innerHTML = '<div class="no-data">لا يوجد موردون معتمدون</div>';
+                    return;
+                }
+                let html = `<table><thead><tr><th>الاسم</th><th>المدينة</th><th>الهاتف</th><th>جهة الاتصال</th></tr></thead><tbody>`;
+                for (const s of data.data) {
+                    const wa = s.phone ? `<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-whatsapp btn-sm">واتساب</a>` : '';
+                    html += `<tr><td>${s.nameAr}</td><td>${s.city||'-'}</td><td>${s.phone||'-'} ${wa}</td><td>${s.contactPerson||'-'}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('suppliersTable').innerHTML = html;
+            } catch(err) {}
+        }
+
+        document.getElementById('supplierForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                nameAr: document.getElementById('supNameAr').value,
+                nameEn: document.getElementById('supNameEn').value,
+                phone: document.getElementById('supPhone').value,
+                contactPerson: document.getElementById('supContact').value,
+                city: document.getElementById('supCity').value,
+                address: document.getElementById('supAddress').value,
+                notes: document.getElementById('supNotes').value,
+                isSupplier: true
+            };
+            try {
+                const res = await fetch(`${API}/companies`, {
+                    method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                showAlert('supplierAlert', data.message, data.success ? 'success' : 'error');
+                if (data.success) document.getElementById('supplierForm').reset();
+            } catch(err) { showAlert('supplierAlert', 'حدث خطأ'); }
+        });
+
+        // Initial load
+        loadRFQs();
+    </script>
+</body>
+</html>

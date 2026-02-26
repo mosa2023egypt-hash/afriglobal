@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أفريجلوبال - المبيعات</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f4f6f9; direction: rtl; color: #333; }
+        header {
+            background: #1e3a5f; color: white; padding: 14px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 20px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .user-info { font-size: 14px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px; }
+        .btn-logout { background: #c0392b; color: white; }
+        .btn-logout:hover { background: #e74c3c; }
+        .btn-primary { background: #1e3a5f; color: white; }
+        .btn-primary:hover { background: #2d5280; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #2ecc71; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #e67e22; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-whatsapp { background: #25d366; color: white; }
+        .btn-whatsapp:hover { background: #128c7e; }
+        .tabs { background: white; border-bottom: 2px solid #e0e0e0; padding: 0 24px; display: flex; gap: 4px; }
+        .tab { padding: 14px 20px; cursor: pointer; font-size: 15px; border-bottom: 3px solid transparent; color: #666; }
+        .tab.active { color: #1e3a5f; border-bottom-color: #1e3a5f; font-weight: bold; }
+        .tab-content { display: none; padding: 24px; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #555; }
+        input, select, textarea {
+            width: 100%; padding: 10px 12px; border: 1.5px solid #d0d0d0;
+            border-radius: 6px; font-size: 14px; font-family: inherit; direction: rtl;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #1e3a5f; }
+        textarea { resize: vertical; min-height: 70px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #1e3a5f; color: white; padding: 12px 10px; text-align: right; }
+        td { padding: 11px 10px; border-bottom: 1px solid #eee; }
+        tr:hover td { background: #f8f9fa; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-draft { background: #e8e8e8; color: #555; }
+        .badge-submitted { background: #fff3cd; color: #856404; }
+        .badge-responded { background: #d1ecf1; color: #0c5460; }
+        .badge-confirmed { background: #d4edda; color: #155724; }
+        .badge-cancelled { background: #f8d7da; color: #721c24; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; }
+        .alert-error { background: #fee; color: #c00; border: 1px solid #fcc; }
+        .alert-success { background: #efe; color: #060; border: 1px solid #cfc; }
+        .items-section { border: 1.5px solid #d0d0d0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .items-section h4 { margin-bottom: 12px; color: #1e3a5f; }
+        .item-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 8px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #1e3a5f; margin-bottom: 16px; }
+        .no-data { text-align: center; color: #888; padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌍 أفريجلوبال - المبيعات</h1>
+        <div class="header-right">
+            <span class="user-info" id="userInfo"></span>
+            <a href="/approvals" style="color:white;text-decoration:none;font-size:14px;">الموافقات</a>
+            <button class="btn btn-logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('orders')">📋 قائمة الطلبات</div>
+        <div class="tab" onclick="showTab('new-order')">➕ إنشاء طلب جديد</div>
+        <div class="tab" onclick="showTab('customers')">🏢 العملاء</div>
+    </div>
+
+    <!-- Orders Tab -->
+    <div id="tab-orders" class="tab-content active">
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="section-title">طلبات المبيعات</div>
+                <button class="btn btn-primary" onclick="loadOrders()">🔄 تحديث</button>
+            </div>
+            <div id="ordersAlert" class="alert"></div>
+            <div id="ordersTable">
+                <div class="no-data">جاري التحميل...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Order Tab -->
+    <div id="tab-new-order" class="tab-content">
+        <div class="card">
+            <div class="section-title">إنشاء طلب مبيعات جديد</div>
+            <div id="newOrderAlert" class="alert"></div>
+            <form id="newOrderForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>العميل *</label>
+                        <select id="customerSelect" required>
+                            <option value="">-- اختر العميل --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم جهة الاتصال</label>
+                        <input type="text" id="contactPerson" placeholder="اسم المسؤول">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الهاتف / واتساب</label>
+                        <input type="tel" id="orderPhone" placeholder="01xxxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>مدينة التسليم</label>
+                        <input type="text" id="deliveryCity" placeholder="القاهرة">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>تفاصيل المستودع (لا يراه المشتريات)</label>
+                    <input type="text" id="warehouseText" placeholder="عنوان المستودع الكامل">
+                </div>
+
+                <div class="items-section">
+                    <h4>البنود المطلوبة</h4>
+                    <div id="itemsList"></div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addItem()">+ إضافة بند</button>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>طريقة التواصل</label>
+                        <select id="contactMethod">
+                            <option value="">--</option>
+                            <option value="واتساب">واتساب</option>
+                            <option value="هاتف">هاتف</option>
+                            <option value="بريد إلكتروني">بريد إلكتروني</option>
+                            <option value="زيارة">زيارة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>رد العميل</label>
+                        <input type="text" id="customerReply" placeholder="رد العميل">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="orderNotes"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات مهمة</label>
+                    <textarea id="importantNotes"></textarea>
+                </div>
+                <div style="display:flex;gap:12px;">
+                    <button type="submit" class="btn btn-primary">💾 حفظ كمسودة</button>
+                    <button type="button" class="btn btn-success" onclick="saveAndSubmit()">📤 حفظ وإرسال للمشتريات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customers Tab -->
+    <div id="tab-customers" class="tab-content">
+        <div class="card">
+            <div class="section-title">إضافة عميل جديد</div>
+            <div id="customerAlert" class="alert"></div>
+            <form id="customerForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>اسم الشركة بالعربي *</label>
+                        <input type="text" id="custNameAr" required>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم الشركة بالإنجليزي</label>
+                        <input type="text" id="custNameEn">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="custPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>جهة الاتصال</label>
+                        <input type="text" id="custContact">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المدينة</label>
+                        <input type="text" id="custCity">
+                    </div>
+                    <div class="form-group">
+                        <label>العنوان</label>
+                        <input type="text" id="custAddress">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="custNotes"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">إرسال للموافقة</button>
+            </form>
+        </div>
+        <div class="card">
+            <div class="section-title">العملاء المعتمدون</div>
+            <div id="customersTable"><div class="no-data">جاري التحميل...</div></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let products = [], origins = [], customers = [];
+        let submitAfterSave = false;
+
+        if (!token) window.location.href = '/login';
+
+        document.getElementById('userInfo').textContent = `${user.fullName || ''} (${roleLabel(user.role)})`;
+
+        function roleLabel(r) {
+            const m = {gm:'مدير عام',sales_manager:'مدير مبيعات',sales:'مبيعات',procurement_manager:'مدير مشتريات',procurement:'مشتريات'};
+            return m[r] || r;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+
+        function authHeaders() {
+            return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+        }
+
+        function showTab(name) {
+            document.querySelectorAll('.tab').forEach((t, i) => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            const tabs = ['orders','new-order','customers'];
+            const idx = tabs.indexOf(name);
+            document.querySelectorAll('.tab')[idx].classList.add('active');
+            document.getElementById(`tab-${name}`).classList.add('active');
+            if (name === 'orders') loadOrders();
+            if (name === 'customers') loadCustomers();
+            if (name === 'new-order') loadFormData();
+        }
+
+        function showAlert(id, msg, type='error') {
+            const el = document.getElementById(id);
+            el.className = `alert alert-${type}`;
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function statusLabel(s) {
+            const m = {
+                draft:'مسودة', submitted_to_procurement:'أرسل للمشتريات',
+                procurement_responded:'رد المشتريات', confirmed:'مؤكد', cancelled:'ملغي'
+            };
+            return m[s] || s;
+        }
+
+        function statusClass(s) {
+            const m = {draft:'badge-draft',submitted_to_procurement:'badge-submitted',
+                procurement_responded:'badge-responded',confirmed:'badge-confirmed',cancelled:'badge-cancelled'};
+            return m[s] || 'badge-draft';
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${API}/sales-orders`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.success) { showAlert('ordersAlert', data.message); return; }
+                if (!data.data.length) {
+                    document.getElementById('ordersTable').innerHTML = '<div class="no-data">لا توجد طلبات</div>';
+                    return;
+                }
+                let html = `<table><thead><tr>
+                    <th>رقم الطلب</th><th>العميل</th><th>مدينة التسليم</th>
+                    <th>البنود</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th>
+                </tr></thead><tbody>`;
+                for (const o of data.data) {
+                    const customer = o.customer ? o.customer.nameAr : '-';
+                    const items = (o.items||[]).map(i => `${i.productNameAr||''} ${i.qtyTons||0} طن`).join('، ');
+                    const waBtn = o.whatsappUrl && o.whatsappUrl !== '#' ?
+                        `<a href="${o.whatsappUrl}" target="_blank" class="btn btn-whatsapp btn-sm">واتساب</a>` : '';
+                    const submitBtn = o.status === 'draft' ?
+                        `<button class="btn btn-success btn-sm" onclick="submitToProcurement('${o._id}')">إرسال للمشتريات</button>` : '';
+                    html += `<tr>
+                        <td><b>${o.orderNumber||'-'}</b></td>
+                        <td>${customer}</td>
+                        <td>${o.deliveryCity||'-'}</td>
+                        <td>${items||'-'}</td>
+                        <td><span class="badge ${statusClass(o.status)}">${statusLabel(o.status)}</span></td>
+                        <td>${new Date(o.createdAt).toLocaleDateString('ar-EG')}</td>
+                        <td style="display:flex;gap:4px;flex-wrap:wrap;">${waBtn} ${submitBtn}</td>
+                    </tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('ordersTable').innerHTML = html;
+            } catch(err) {
+                showAlert('ordersAlert', 'خطأ في تحميل الطلبات');
+            }
+        }
+
+        async function submitToProcurement(id) {
+            if (!confirm('هل تريد إرسال هذا الطلب للمشتريات؟')) return;
+            try {
+                const res = await fetch(`${API}/sales-orders/${id}/submit-to-procurement`, {
+                    method: 'POST', headers: authHeaders()
+                });
+                const data = await res.json();
+                if (data.success) { showAlert('ordersAlert', 'تم إرسال الطلب للمشتريات', 'success'); loadOrders(); }
+                else showAlert('ordersAlert', data.message);
+            } catch(err) { showAlert('ordersAlert', 'حدث خطأ'); }
+        }
+
+        async function loadFormData() {
+            try {
+                const [pRes, oRes, cRes] = await Promise.all([
+                    fetch(`${API}/approvals/products`, { headers: authHeaders() }),
+                    fetch(`${API}/approvals/origins`, { headers: authHeaders() }),
+                    fetch(`${API}/companies?isCustomer=true`, { headers: authHeaders() })
+                ]);
+                const [pData, oData, cData] = await Promise.all([pRes.json(), oRes.json(), cRes.json()]);
+                products = pData.data || [];
+                origins = oData.data || [];
+                customers = cData.data || [];
+                const sel = document.getElementById('customerSelect');
+                sel.innerHTML = '<option value="">-- اختر العميل --</option>';
+                customers.forEach(c => sel.innerHTML += `<option value="${c._id}">${c.nameAr}</option>`);
+                if (!document.getElementById('itemsList').children.length) addItem();
+            } catch(err) {}
+        }
+
+        function addItem() {
+            const div = document.createElement('div');
+            div.className = 'item-row';
+            div.innerHTML = `
+                <div>
+                    <label>المنتج</label>
+                    <select class="item-product" onchange="updateProductName(this)">
+                        <option value="">-- منتج --</option>
+                        ${products.map(p => `<option value="${p._id}" data-name="${p.nameAr}">${p.nameAr}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label>المنشأ</label>
+                    <select class="item-origin" onchange="updateOriginName(this)">
+                        <option value="">-- منشأ --</option>
+                        ${origins.map(o => `<option value="${o._id}" data-name="${o.nameAr}">${o.nameAr}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label>الكمية (طن)</label>
+                    <input type="number" class="item-qty" min="0" step="0.1" placeholder="0">
+                </div>
+                <div>
+                    <label>السعر/طن</label>
+                    <input type="number" class="item-price" min="0" step="0.01" placeholder="0">
+                </div>
+                <div>
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-sm" style="background:#e74c3c;color:white;" onclick="this.closest('.item-row').remove()">حذف</button>
+                </div>`;
+            document.getElementById('itemsList').appendChild(div);
+        }
+
+        function updateProductName(sel) {}
+        function updateOriginName(sel) {}
+
+        function collectItems() {
+            const rows = document.querySelectorAll('.item-row');
+            return Array.from(rows).map(row => {
+                const pSel = row.querySelector('.item-product');
+                const oSel = row.querySelector('.item-origin');
+                const pOpt = pSel.options[pSel.selectedIndex];
+                const oOpt = oSel.options[oSel.selectedIndex];
+                return {
+                    product: pSel.value || undefined,
+                    productNameAr: pOpt ? pOpt.dataset.name : '',
+                    origin: oSel.value || undefined,
+                    originNameAr: oOpt ? oOpt.dataset.name : '',
+                    qtyTons: parseFloat(row.querySelector('.item-qty').value) || 0,
+                    offeredPricePerTon: parseFloat(row.querySelector('.item-price').value) || 0,
+                };
+            }).filter(i => i.product || i.qtyTons);
+        }
+
+        async function saveAndSubmit() {
+            submitAfterSave = true;
+            document.getElementById('newOrderForm').dispatchEvent(new Event('submit'));
+        }
+
+        document.getElementById('newOrderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const customerId = document.getElementById('customerSelect').value;
+            if (!customerId) { showAlert('newOrderAlert', 'الرجاء اختيار العميل'); return; }
+
+            const payload = {
+                customer: customerId,
+                contactPerson: document.getElementById('contactPerson').value,
+                phone: document.getElementById('orderPhone').value,
+                deliveryCity: document.getElementById('deliveryCity').value,
+                warehouseText: document.getElementById('warehouseText').value,
+                items: collectItems(),
+                contactMethod: document.getElementById('contactMethod').value,
+                customerReply: document.getElementById('customerReply').value,
+                notes: document.getElementById('orderNotes').value,
+                importantNotes: document.getElementById('importantNotes').value,
+            };
+
+            try {
+                const res = await fetch(`${API}/sales-orders`, {
+                    method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (submitAfterSave) {
+                        submitAfterSave = false;
+                        const id = data.data._id;
+                        const res2 = await fetch(`${API}/sales-orders/${id}/submit-to-procurement`, {
+                            method: 'POST', headers: authHeaders()
+                        });
+                        const data2 = await res2.json();
+                        if (data2.success) showAlert('newOrderAlert', 'تم الحفظ والإرسال للمشتريات بنجاح', 'success');
+                        else showAlert('newOrderAlert', data2.message);
+                    } else {
+                        showAlert('newOrderAlert', 'تم حفظ الطلب كمسودة', 'success');
+                    }
+                    document.getElementById('newOrderForm').reset();
+                    document.getElementById('itemsList').innerHTML = '';
+                } else {
+                    showAlert('newOrderAlert', data.message);
+                }
+            } catch(err) { showAlert('newOrderAlert', 'حدث خطأ في الحفظ'); }
+            submitAfterSave = false;
+        });
+
+        async function loadCustomers() {
+            try {
+                const res = await fetch(`${API}/companies?isCustomer=true`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.success) return;
+                if (!data.data.length) {
+                    document.getElementById('customersTable').innerHTML = '<div class="no-data">لا يوجد عملاء معتمدون</div>';
+                    return;
+                }
+                let html = `<table><thead><tr><th>الاسم</th><th>المدينة</th><th>الهاتف</th><th>جهة الاتصال</th></tr></thead><tbody>`;
+                for (const c of data.data) {
+                    const wa = c.phone ? `<a href="https://wa.me/${c.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-whatsapp btn-sm">واتساب</a>` : '';
+                    html += `<tr><td>${c.nameAr}</td><td>${c.city||'-'}</td><td>${c.phone||'-'} ${wa}</td><td>${c.contactPerson||'-'}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('customersTable').innerHTML = html;
+            } catch(err) {}
+        }
+
+        document.getElementById('customerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                nameAr: document.getElementById('custNameAr').value,
+                nameEn: document.getElementById('custNameEn').value,
+                phone: document.getElementById('custPhone').value,
+                contactPerson: document.getElementById('custContact').value,
+                city: document.getElementById('custCity').value,
+                address: document.getElementById('custAddress').value,
+                notes: document.getElementById('custNotes').value,
+                isCustomer: true
+            };
+            try {
+                const res = await fetch(`${API}/companies`, {
+                    method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                showAlert('customerAlert', data.message, data.success ? 'success' : 'error');
+                if (data.success) document.getElementById('customerForm').reset();
+            } catch(err) { showAlert('customerAlert', 'حدث خطأ'); }
+        });
+
+        // Initial load
+        loadOrders();
+    </script>
+</body>
+</html>

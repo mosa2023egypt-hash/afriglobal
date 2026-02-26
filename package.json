@@ -1,1 +1,29 @@
-{"name":"afriglobal","version":"1.0.0","description":"Business Management System for African Global","main":"index.js","scripts":{"start":"node index.js","dev":"nodemon index.js"},"keywords":["business","management","erp","africa"],"author":"","license":"ISC","dependencies":{"bcryptjs":"^2.4.3","dotenv":"^16.0.3","express":"^4.18.2","jsonwebtoken":"^9.0.0","mongoose":"^7.0.0"},"devDependencies":{"nodemon":"^2.0.20"}}
+{
+    "name": "afriglobal",
+    "version": "1.0.0",
+    "description": "Business Management System for African Global",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js",
+        "seed": "node scripts/seed.js"
+    },
+    "keywords": [
+        "business",
+        "management",
+        "erp",
+        "africa"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "dotenv": "^16.0.3",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.0",
+        "mongoose": "^7.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.20"
+    }
+}
