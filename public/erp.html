@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AfriGlobal ERP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f4f6f9; color: #333; }
+
+    header {
+      background: #1a237e;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.4rem; }
+
+    nav {
+      background: #283593;
+      display: flex;
+      gap: 4px;
+      padding: 8px 24px;
+      flex-wrap: wrap;
+    }
+    nav button {
+      background: transparent;
+      border: 1px solid #5c6bc0;
+      color: #c5cae9;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    nav button:hover, nav button.active {
+      background: #3949ab;
+      color: #fff;
+    }
+
+    main { padding: 24px; max-width: 1100px; margin: auto; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .card h2 { margin-bottom: 14px; font-size: 1.1rem; color: #1a237e; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .stat-card .value { font-size: 2rem; font-weight: bold; color: #1a237e; }
+    .stat-card .label { font-size: 0.8rem; color: #666; margin-top: 4px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e0e0e0; }
+    th { background: #e8eaf6; color: #1a237e; }
+    tr:hover td { background: #f5f5f5; }
+
+    form .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    form input, form select {
+      flex: 1;
+      min-width: 140px;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    form button {
+      padding: 8px 20px;
+      background: #1a237e;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    form button:hover { background: #283593; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .badge-green { background: #c8e6c9; color: #2e7d32; }
+    .badge-red   { background: #ffcdd2; color: #c62828; }
+    .badge-blue  { background: #bbdefb; color: #1565c0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>&#127758; AfriGlobal ERP</h1>
+  <span id="clock"></span>
+</header>
+
+<nav>
+  <button class="active" onclick="showPanel('dashboard', this)">Dashboard</button>
+  <button onclick="showPanel('accounting', this)">Accounting</button>
+  <button onclick="showPanel('permissions', this)">Permissions</button>
+  <button onclick="showPanel('inventory', this)">Inventory</button>
+</nav>
+
+<main>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="panel active">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="value" id="stat-income">$0</div><div class="label">Total Income</div></div>
+      <div class="stat-card"><div class="value" id="stat-expense">$0</div><div class="label">Total Expenses</div></div>
+      <div class="stat-card"><div class="value" id="stat-transactions">0</div><div class="label">Transactions</div></div>
+      <div class="stat-card"><div class="value" id="stat-permissions">0</div><div class="label">Permissions</div></div>
+    </div>
+    <div class="card">
+      <h2>Welcome to AfriGlobal ERP</h2>
+      <p>Use the navigation above to manage accounting transactions, user permissions, and inventory.</p>
+    </div>
+  </div>
+
+  <!-- Accounting -->
+  <div id="accounting" class="panel">
+    <div class="card">
+      <h2>Add Transaction</h2>
+      <form id="txForm">
+        <div class="row">
+          <input id="txDesc" placeholder="Description" required />
+          <input id="txAmount" type="number" placeholder="Amount" required />
+          <select id="txType">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+        <button type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Transactions</h2>
+      <table>
+        <thead><tr><th>#</th><th>Description</th><th>Amount</th><th>Type</th></tr></thead>
+        <tbody id="txTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Permissions -->
+  <div id="permissions" class="panel">
+    <div class="card">
+      <h2>Add Permission</h2>
+      <form id="permForm">
+        <div class="row">
+          <input id="permName" placeholder="Permission name" required />
+          <input id="permCat" placeholder="Category" required />
+        </div>
+        <button type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Permissions</h2>
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Category</th></tr></thead>
+        <tbody id="permTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Inventory (placeholder) -->
+  <div id="inventory" class="panel">
+    <div class="card">
+      <h2>Inventory</h2>
+      <p>Inventory management is available via <code>GET /api/products</code>. UI coming soon.</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Clock
+  function tick() { document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
+  tick(); setInterval(tick, 1000);
+
+  // Panel navigation
+  function showPanel(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'dashboard') refreshDashboard();
+  }
+
+  // --- Accounting ---
+  async function loadTransactions() {
+    try {
+      const res = await fetch('/api/accounting/transactions');
+      const data = await res.json();
+      const tbody = document.getElementById('txTable');
+      tbody.innerHTML = data.map(t =>
+        `<tr><td>${t.id}</td><td>${t.description || '-'}</td><td>$${t.amount}</td>
+         <td><span class="badge ${t.type === 'income' ? 'badge-green' : 'badge-red'}">${t.type}</span></td></tr>`
+      ).join('');
+    } catch (e) { console.error('Failed to load transactions', e); }
+  }
+
+  document.getElementById('txForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    await fetch('/api/accounting/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: document.getElementById('txDesc').value,
+        amount: parseFloat(document.getElementById('txAmount').value),
+        type: document.getElementById('txType').value
+      })
+    });
+    e.target.reset();
+    loadTransactions();
+  });
+
+  // --- Permissions ---
+  async function loadPermissions() {
+    try {
+      const res = await fetch('/api/permissions/permissions');
+      const data = await res.json();
+      const tbody = document.getElementById('permTable');
+      tbody.innerHTML = data.map(p =>
+        `<tr><td>${p.id}</td><td>${p.name}</td><td><span class="badge badge-blue">${p.category}</span></td></tr>`
+      ).join('');
+    } catch (e) { console.error('Failed to load permissions', e); }
+  }
+
+  document.getElementById('permForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    await fetch('/api/permissions/permissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('permName').value,
+        category: document.getElementById('permCat').value
+      })
+    });
+    e.target.reset();
+    loadPermissions();
+  });
+
+  // --- Dashboard ---
+  async function refreshDashboard() {
+    try {
+      const [sumRes, permRes] = await Promise.all([
+        fetch('/api/accounting/summary'),
+        fetch('/api/permissions/permissions')
+      ]);
+      const sum = await sumRes.json();
+      const perms = await permRes.json();
+      document.getElementById('stat-income').textContent = '$' + (sum.totalIncome || 0);
+      document.getElementById('stat-expense').textContent = '$' + (sum.totalExpense || 0);
+      document.getElementById('stat-transactions').textContent = sum.totalTransactions || 0;
+      document.getElementById('stat-permissions').textContent = perms.length || 0;
+    } catch (e) { console.error('Dashboard refresh failed', e); }
+  }
+
+  // Initial loads
+  loadTransactions();
+  loadPermissions();
+  refreshDashboard();
+</script>
+</body>
+</html>

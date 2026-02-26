@@ -4,13 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 // Mock data
-type Permission = {
-  id: number;
-  name: string;
-  category: string;
-};
-
-let permissions: Permission[] = [];
+let permissions = [];
 
 // Create a new permission
 router.post('/permissions', (req, res) => {
