@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اعتمادات المواد – أفري جلوبال</title>
+<link rel="stylesheet" href="/new-styles.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="container">
+    <div class="card">
+        <div class="card-title">✅ اعتمادات المواد (Pending)</div>
+        <p class="text-muted mt-2" style="margin-bottom:14px;">
+            تظهر هنا المواد التي تنتظر الموافقة. المديرون يرون كل الطلبات، الموظفون يرون طلباتهم فقط.
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th><th>اسم المادة</th><th>الاسم بالانجليزي</th><th>نوع المادة</th>
+                        <th>الاسم التجاري</th><th>الوحدة</th><th>طالب الإضافة</th>
+                        <th>تاريخ الطلب</th><th>الحالة</th><th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="approvalsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="/new-app.js"></script>
+<script>
+    const user = requireAuth();
+    renderNavbar(user);
+
+    const STORE_KEY = 'materials';
+    const isManager = Roles.isManager(user.role);
+
+    function getMaterials() { return getStore(STORE_KEY); }
+    function saveMaterials(arr) { setStore(STORE_KEY, arr); }
+
+    function render() {
+        const materials = getMaterials();
+        // Show pending items visible to current user
+        const pending = materials.filter(m =>
+            m.status === 'pending' &&
+            (isManager || m.createdBy === user.username)
+        );
+        const tbody = document.getElementById('approvalsBody');
+        if (pending.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-muted">لا توجد طلبات معلقة</td></tr>';
+            return;
+        }
+        tbody.innerHTML = pending.map((m, i) => {
+            const unitLabel = m.unit === 'kg' ? 'كيلو' : 'طن';
+            const dateStr = m.createdAt ? m.createdAt.slice(0,10) : '';
+            const actions = isManager
+                ? `<button class="btn btn-success btn-sm" onclick="decide('${m.id}','approved')">موافقة</button>
+                   <button class="btn btn-danger btn-sm" onclick="decide('${m.id}','rejected')">رفض</button>`
+                : '<span class="text-muted">قيد المراجعة</span>';
+            return `<tr>
+                <td>${i+1}</td>
+                <td>${m.name||''}</td>
+                <td>${m.nameEn||''}</td>
+                <td>${m.type||''}</td>
+                <td>${m.brandName||''}</td>
+                <td>${unitLabel}</td>
+                <td>${m.createdByName||m.createdBy||''}</td>
+                <td>${dateStr}</td>
+                <td><span class="badge badge-pending">قيد الانتظار</span></td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function decide(id, status) {
+        const materials = getMaterials();
+        const m = materials.find(x => x.id === id);
+        if (!m) return;
+        m.status = status;
+        m.decidedBy = user.username;
+        m.decidedAt = new Date().toISOString();
+        saveMaterials(materials);
+        render();
+    }
+
+    render();
+</script>
+</body>
+</html>

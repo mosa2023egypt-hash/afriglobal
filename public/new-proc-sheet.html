@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شيت المشتريات – أفري جلوبال</title>
+<link rel="stylesheet" href="/new-styles.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="container">
+    <div class="card">
+        <div class="card-title">🛒 شيت المشتريات</div>
+
+        <div class="filter-bar">
+            <div class="form-group">
+                <label>الفترة</label>
+                <select id="periodFilter"></select>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">+ إضافة سطر</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th><th>التاريخ</th><th>المادة</th><th>الاسم بالانجليزي</th>
+                        <th>نوع المادة</th><th>الاسم التجاري</th><th>التركيز</th><th>المنشأ</th>
+                        <th>السعر</th><th>المورد</th><th>المسئول</th><th>التليفون</th>
+                        <th>الواتس</th><th>المخزن</th><th>الملاحظات</th><th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="sheetBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>إضافة سطر – شيت المشتريات</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <form id="rowForm">
+            <input type="hidden" id="editId">
+            <div class="form-group"><label>التاريخ</label><input type="date" id="fDate" required></div>
+            <div class="form-group"><label>المادة</label><input type="text" id="fMaterial" required></div>
+            <div class="form-group"><label>الاسم بالانجليزي</label><input type="text" id="fNameEn"></div>
+            <div class="form-group"><label>نوع المادة</label><input type="text" id="fType"></div>
+            <div class="form-group"><label>الاسم التجاري</label><input type="text" id="fBrandName"></div>
+            <div class="form-group"><label>التركيز</label><input type="text" id="fConcentration"></div>
+            <div class="form-group"><label>المنشأ</label><input type="text" id="fOrigin"></div>
+            <div class="form-group"><label>السعر</label><input type="number" step="any" id="fPrice"></div>
+            <div class="form-group"><label>المورد</label><input type="text" id="fSupplier"></div>
+            <div class="form-group"><label>المسئول</label><input type="text" id="fResponsible"></div>
+            <div class="form-group"><label>التليفون</label><input type="tel" id="fPhone"></div>
+            <div class="form-group"><label>الواتس</label><input type="tel" id="fWhatsapp"></div>
+            <div class="form-group"><label>المخزن</label><input type="text" id="fWarehouse"></div>
+            <div class="form-group"><label>الملاحظات</label><textarea id="fNotes"></textarea></div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">حفظ</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/new-app.js"></script>
+<script>
+    const user = requireAuth();
+    renderNavbar(user);
+
+    const STORE_KEY = 'proc_sheet';
+    const canEdit = Roles.isAdmin(user.role) || Roles.isProcurement(user.role) || Roles.isGM(user.role);
+    let todayDate = '';
+
+    fetchTodayDate().then(d => {
+        todayDate = d;
+        document.getElementById('fDate').value = d;
+    });
+
+    function buildPeriods() {
+        const rows = getStore(STORE_KEY);
+        const periods = [...new Set(rows.map(r => r.date ? r.date.slice(0,7) : ''))].filter(Boolean).sort().reverse();
+        const cur = currentPeriod();
+        if (!periods.includes(cur)) periods.unshift(cur);
+        const sel = document.getElementById('periodFilter');
+        sel.innerHTML = periods.map(p => `<option value="${p}">${periodLabel(p)}</option>`).join('');
+        if (Roles.isManager(user.role)) sel.innerHTML = '<option value="">كل الفترات</option>' + sel.innerHTML;
+        else sel.value = cur;
+    }
+
+    function render() {
+        const period = document.getElementById('periodFilter').value;
+        let rows = getStore(STORE_KEY);
+        if (period) rows = rows.filter(r => r.date && r.date.startsWith(period));
+        const tbody = document.getElementById('sheetBody');
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="16" class="text-muted">لا يوجد بيانات</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map((r, i) => `
+            <tr>
+                <td>${i+1}</td><td>${r.date||''}</td><td>${r.material||''}</td><td>${r.nameEn||''}</td>
+                <td>${r.type||''}</td><td>${r.brandName||''}</td><td>${r.concentration||''}</td>
+                <td>${r.origin||''}</td><td>${r.price||''}</td><td>${r.supplier||''}</td>
+                <td>${r.responsible||''}</td><td>${r.phone||''}</td><td>${r.whatsapp||''}</td>
+                <td>${r.warehouse||''}</td><td>${r.notes||''}</td>
+                <td>${canEdit ? `<button class="btn btn-danger btn-sm" onclick="deleteRow('${r.id}')">حذف</button>` : ''}</td>
+            </tr>`).join('');
+    }
+
+    document.getElementById('periodFilter').addEventListener('change', render);
+
+    function openAddModal() {
+        if (!canEdit) return alert('ليس لديك صلاحية الإضافة');
+        document.getElementById('editId').value = '';
+        document.getElementById('rowForm').reset();
+        document.getElementById('fDate').value = todayDate;
+        document.getElementById('modal').classList.add('active');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+    function deleteRow(id) {
+        if (!confirm('هل تريد حذف هذا السطر؟')) return;
+        setStore(STORE_KEY, getStore(STORE_KEY).filter(r => r.id !== id));
+        buildPeriods(); render();
+    }
+
+    document.getElementById('rowForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const rows = getStore(STORE_KEY);
+        rows.push({
+            id: uid(),
+            date: document.getElementById('fDate').value,
+            material: document.getElementById('fMaterial').value,
+            nameEn: document.getElementById('fNameEn').value,
+            type: document.getElementById('fType').value,
+            brandName: document.getElementById('fBrandName').value,
+            concentration: document.getElementById('fConcentration').value,
+            origin: document.getElementById('fOrigin').value,
+            price: document.getElementById('fPrice').value,
+            supplier: document.getElementById('fSupplier').value,
+            responsible: document.getElementById('fResponsible').value,
+            phone: document.getElementById('fPhone').value,
+            whatsapp: document.getElementById('fWhatsapp').value,
+            warehouse: document.getElementById('fWarehouse').value,
+            notes: document.getElementById('fNotes').value,
+            createdBy: user.username
+        });
+        setStore(STORE_KEY, rows);
+        buildPeriods(); render(); closeModal();
+    });
+
+    buildPeriods(); render();
+</script>
+</body>
+</html>

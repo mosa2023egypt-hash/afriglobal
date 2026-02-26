@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قائمة المواد – أفري جلوبال</title>
+<link rel="stylesheet" href="/new-styles.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="container">
+    <div class="card">
+        <div class="card-title">🧪 قائمة المواد الموحدة</div>
+
+        <div class="flex-row" style="margin-bottom:14px;">
+            <button class="btn btn-primary" onclick="openAddModal()">+ طلب إضافة مادة</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th><th>اسم المادة</th><th>الاسم بالانجليزي</th><th>نوع المادة</th>
+                        <th>الاسم التجاري</th><th>وحدة التسعير</th><th>الحالة</th>
+                        <th>أُضيف بواسطة</th><th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="materialsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة مادة -->
+<div class="modal-overlay" id="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>طلب إضافة مادة جديدة</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <form id="matForm">
+            <div class="form-group"><label>اسم المادة (عربي)</label><input type="text" id="fName" required></div>
+            <div class="form-group"><label>الاسم بالانجليزي</label><input type="text" id="fNameEn"></div>
+            <div class="form-group"><label>نوع المادة</label><input type="text" id="fType"></div>
+            <div class="form-group"><label>الاسم التجاري</label><input type="text" id="fBrandName"></div>
+            <div class="form-group"><label>وحدة التسعير المقترحة</label>
+                <select id="fUnit"><option value="ton">طن (افتراضي)</option><option value="kg">كيلو</option></select>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">إرسال الطلب</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal تغيير وحدة التسعير (للمديرين) -->
+<div class="modal-overlay" id="unitModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>تغيير وحدة التسعير</h3>
+            <button class="modal-close" onclick="closeUnitModal()">✕</button>
+        </div>
+        <form id="unitForm">
+            <input type="hidden" id="editUnitId">
+            <div class="form-group"><label>وحدة التسعير</label>
+                <select id="fUnitEdit"><option value="ton">طن</option><option value="kg">كيلو</option></select>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">حفظ</button>
+                <button type="button" class="btn btn-secondary" onclick="closeUnitModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/new-app.js"></script>
+<script>
+    const user = requireAuth();
+    renderNavbar(user);
+
+    const STORE_KEY = 'materials';
+    const isManager = Roles.isManager(user.role);
+
+    function getMaterials() { return getStore(STORE_KEY); }
+    function saveMaterials(arr) { setStore(STORE_KEY, arr); }
+
+    function render() {
+        const materials = getMaterials();
+        const tbody = document.getElementById('materialsBody');
+        // Regular users see approved + their own pending; managers see all
+        const visible = materials.filter(m =>
+            m.status === 'approved' ||
+            isManager ||
+            m.createdBy === user.username
+        );
+        if (visible.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-muted">لا توجد مواد بعد</td></tr>';
+            return;
+        }
+        tbody.innerHTML = visible.map((m, i) => {
+            const statusBadge = m.status === 'approved'
+                ? '<span class="badge badge-approved">معتمدة</span>'
+                : m.status === 'rejected'
+                    ? '<span class="badge badge-rejected">مرفوضة</span>'
+                    : '<span class="badge badge-pending">قيد الانتظار</span>';
+            const unitLabel = m.unit === 'kg' ? 'كيلو' : 'طن';
+            const canChangeUnit = isManager && m.status === 'approved';
+            return `<tr>
+                <td>${i+1}</td>
+                <td>${m.name||''}</td>
+                <td>${m.nameEn||''}</td>
+                <td>${m.type||''}</td>
+                <td>${m.brandName||''}</td>
+                <td>${unitLabel}</td>
+                <td>${statusBadge}</td>
+                <td>${m.createdByName||m.createdBy||''}</td>
+                <td>
+                    ${canChangeUnit ? `<button class="btn btn-warning btn-sm" onclick="openUnitModal('${m.id}','${m.unit||'ton'}')">تغيير الوحدة</button>` : ''}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function openAddModal() {
+        document.getElementById('matForm').reset();
+        document.getElementById('modal').classList.add('active');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+    function openUnitModal(id, unit) {
+        document.getElementById('editUnitId').value = id;
+        document.getElementById('fUnitEdit').value = unit;
+        document.getElementById('unitModal').classList.add('active');
+    }
+    function closeUnitModal() { document.getElementById('unitModal').classList.remove('active'); }
+
+    document.getElementById('matForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const materials = getMaterials();
+        materials.push({
+            id: uid(),
+            name: document.getElementById('fName').value,
+            nameEn: document.getElementById('fNameEn').value,
+            type: document.getElementById('fType').value,
+            brandName: document.getElementById('fBrandName').value,
+            unit: document.getElementById('fUnit').value,
+            status: 'pending',
+            createdBy: user.username,
+            createdByName: user.name,
+            createdAt: new Date().toISOString()
+        });
+        saveMaterials(materials);
+        render(); closeModal();
+    });
+
+    document.getElementById('unitForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editUnitId').value;
+        const unit = document.getElementById('fUnitEdit').value;
+        const materials = getMaterials();
+        const m = materials.find(x => x.id === id);
+        if (m) { m.unit = unit; saveMaterials(materials); }
+        render(); closeUnitModal();
+    });
+
+    render();
+</script>
+</body>
+</html>

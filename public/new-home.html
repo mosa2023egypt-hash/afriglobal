@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الرئيسية – أفري جلوبال</title>
+<link rel="stylesheet" href="/new-styles.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="container">
+    <div class="card">
+        <div class="card-title">مرحباً، <span id="userName"></span></div>
+        <p id="welcomeMsg" style="margin-bottom:20px;color:#555;"></p>
+        <div class="tiles" id="tilesContainer"></div>
+    </div>
+</div>
+
+<script src="/new-app.js"></script>
+<script>
+    const user = requireAuth();
+    renderNavbar(user);
+    document.getElementById('userName').textContent = user.name;
+    document.getElementById('welcomeMsg').textContent = 'أهلاً بك في نظام أفري جلوبال. اختر القسم المناسب:';
+
+    const tiles = [];
+    const r = user.role;
+
+    if (Roles.isAdmin(r) || Roles.isGM(r)) {
+        tiles.push({ href: '/new-admin-users.html',       icon: '👥', label: 'إدارة المستخدمين',   cls: 'tile-admin' });
+    }
+    if (Roles.isAdmin(r) || Roles.isSales(r) || Roles.isGM(r)) {
+        tiles.push({ href: '/new-sales-sheet.html',       icon: '📋', label: 'شيت المبيعات',       cls: 'tile-sales' });
+        tiles.push({ href: '/new-sales-report.html',      icon: '📊', label: 'تقرير المبيعات',     cls: 'tile-sales' });
+    }
+    if (Roles.isAdmin(r) || Roles.isProcurement(r) || Roles.isGM(r)) {
+        tiles.push({ href: '/new-proc-sheet.html',        icon: '🛒', label: 'شيت المشتريات',      cls: 'tile-proc' });
+        tiles.push({ href: '/new-proc-report.html',       icon: '📦', label: 'تقرير المشتريات',    cls: 'tile-proc' });
+    }
+    tiles.push({ href: '/new-materials.html',             icon: '🧪', label: 'قائمة المواد',       cls: '' });
+    tiles.push({ href: '/new-materials-approvals.html',   icon: '✅', label: 'اعتمادات المواد',    cls: '' });
+
+    const container = document.getElementById('tilesContainer');
+    container.innerHTML = tiles.map(t =>
+        `<a class="tile ${t.cls}" href="${t.href}">
+            <div class="tile-icon">${t.icon}</div>
+            ${t.label}
+        </a>`
+    ).join('');
+</script>
+</body>
+</html>
