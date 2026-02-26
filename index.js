@@ -46,13 +46,20 @@ app.use('/api/departments', apiLimiter, require('./routes/departments'));
 app.use('/api/permissions', apiLimiter, require('./routes/permissions'));
 app.use('/api/roles', apiLimiter, require('./routes/roles'));
 
+const pageLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // HTML pages
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
-app.get('/sales', (req, res) => res.sendFile(path.join(__dirname, 'public', 'sales.html')));
-app.get('/procurement', (req, res) => res.sendFile(path.join(__dirname, 'public', 'procurement.html')));
-app.get('/approvals', (req, res) => res.sendFile(path.join(__dirname, 'public', 'approvals.html')));
-app.get('/gm-dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gm-dashboard.html')));
+app.get('/', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/login', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/sales', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'sales.html')));
+app.get('/procurement', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'procurement.html')));
+app.get('/approvals', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'approvals.html')));
+app.get('/gm-dashboard', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'gm-dashboard.html')));
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
