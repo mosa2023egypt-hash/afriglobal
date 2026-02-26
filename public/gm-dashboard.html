@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أفريجلوبال - لوحة المدير العام</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f4f6f9; direction: rtl; color: #333; }
+        header {
+            background: #1e3a5f; color: white; padding: 14px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 20px; }
+        .header-right { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+        .header-right a { color: white; text-decoration: none; }
+        .header-right a:hover { text-decoration: underline; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px; }
+        .btn-logout { background: #c0392b; color: white; }
+        .btn-refresh { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+        .btn-refresh:hover { background: rgba(255,255,255,0.3); }
+        .container { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-card {
+            background: white; border-radius: 12px; padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-right: 4px solid #1e3a5f;
+        }
+        .kpi-card.warning { border-right-color: #f39c12; }
+        .kpi-card.danger { border-right-color: #e74c3c; }
+        .kpi-card.success { border-right-color: #27ae60; }
+        .kpi-label { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .kpi-value { font-size: 32px; font-weight: bold; color: #1e3a5f; }
+        .kpi-card.warning .kpi-value { color: #f39c12; }
+        .kpi-card.danger .kpi-value { color: #e74c3c; }
+        .kpi-card.success .kpi-value { color: #27ae60; }
+        .kpi-sub { font-size: 12px; color: #888; margin-top: 4px; }
+        .card { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 24px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #1e3a5f; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #1e3a5f; color: white; padding: 12px 10px; text-align: right; }
+        td { padding: 11px 10px; border-bottom: 1px solid #eee; }
+        tr:hover td { background: #f8f9fa; }
+        .elapsed-ok { color: #27ae60; font-weight: 600; }
+        .elapsed-warn { color: #f39c12; font-weight: 600; }
+        .elapsed-danger { color: #e74c3c; font-weight: bold; }
+        .no-data { text-align: center; color: #888; padding: 30px; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .status-item { background: #f8f9fa; border-radius: 8px; padding: 14px; text-align: center; }
+        .status-item .count { font-size: 28px; font-weight: bold; color: #1e3a5f; }
+        .status-item .label { font-size: 12px; color: #666; margin-top: 4px; }
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌍 أفريجلوبال - لوحة المدير العام</h1>
+        <div class="header-right">
+            <span id="userInfo"></span>
+            <a href="/sales">المبيعات</a>
+            <a href="/procurement">المشتريات</a>
+            <a href="/approvals">الموافقات</a>
+            <button class="btn btn-refresh" onclick="loadKPIs()">🔄 تحديث</button>
+            <button class="btn btn-logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="kpi-grid" id="kpiGrid">
+            <div class="kpi-card"><div class="kpi-label">جاري التحميل...</div></div>
+        </div>
+
+        <div class="two-col">
+            <div class="card">
+                <div class="section-title">⚠️ الطلبات المتوقفة (لم يرد عليها المشتريات)</div>
+                <div id="stuckTable"><div class="no-data">جاري التحميل...</div></div>
+            </div>
+            <div class="card">
+                <div class="section-title">⏳ عروض الأسعار المعلقة</div>
+                <div id="pendingQuotesTable"><div class="no-data">جاري التحميل...</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-title">📊 ملخص حالات الطلبات</div>
+            <div id="statusSummary"><div class="no-data">جاري التحميل...</div></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '/login';
+
+        const allowed = ['gm', 'sales_manager', 'procurement_manager'];
+        if (!allowed.includes(user.role)) window.location.href = '/sales';
+
+        document.getElementById('userInfo').textContent = `${user.fullName || ''} (${roleLabel(user.role)})`;
+
+        function roleLabel(r) {
+            const m = {gm:'مدير عام',sales_manager:'مدير مبيعات',sales:'مبيعات',procurement_manager:'مدير مشتريات',procurement:'مشتريات'};
+            return m[r] || r;
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+        function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        function elapsedClass(h) {
+            if (h < 24) return 'elapsed-ok';
+            if (h < 48) return 'elapsed-warn';
+            return 'elapsed-danger';
+        }
+
+        async function loadKPIs() {
+            try {
+                const res = await fetch(`${API}/dashboard/kpi`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.success) return;
+                const d = data.data;
+
+                document.getElementById('kpiGrid').innerHTML = `
+                    <div class="kpi-card success">
+                        <div class="kpi-label">متوسط استجابة الموردين</div>
+                        <div class="kpi-value">${d.supplierQuote.avgResponseHours}</div>
+                        <div class="kpi-sub">ساعة (وسيط: ${d.supplierQuote.medianResponseHours} ساعة) • ${d.supplierQuote.totalResponded} عرض</div>
+                    </div>
+                    <div class="kpi-card ${d.salesProcurementStage.avgResponseHours > 48 ? 'danger' : d.salesProcurementStage.avgResponseHours > 24 ? 'warning' : 'success'}">
+                        <div class="kpi-label">متوسط استجابة المشتريات للمبيعات</div>
+                        <div class="kpi-value">${d.salesProcurementStage.avgResponseHours}</div>
+                        <div class="kpi-sub">ساعة • ${d.salesProcurementStage.totalCompleted} طلب مكتمل</div>
+                    </div>
+                    <div class="kpi-card ${d.stuckOrders.length > 0 ? 'danger' : 'success'}">
+                        <div class="kpi-label">طلبات متوقفة (أكثر من ${d.stuckThresholdHours} ساعة)</div>
+                        <div class="kpi-value">${d.stuckOrders.length}</div>
+                        <div class="kpi-sub">طلب بدون رد من المشتريات</div>
+                    </div>
+                    <div class="kpi-card ${d.pendingQuotes.length > 5 ? 'warning' : 'success'}">
+                        <div class="kpi-label">عروض أسعار معلقة</div>
+                        <div class="kpi-value">${d.pendingQuotes.length}</div>
+                        <div class="kpi-sub">بانتظار رد المورد</div>
+                    </div>`;
+
+                // Stuck orders
+                if (!d.stuckOrders.length) {
+                    document.getElementById('stuckTable').innerHTML = '<div class="no-data">✅ لا توجد طلبات متوقفة</div>';
+                } else {
+                    let html = `<table><thead><tr><th>رقم الطلب</th><th>المدينة</th><th>منذ (ساعة)</th></tr></thead><tbody>`;
+                    for (const o of d.stuckOrders) {
+                        const cls = elapsedClass(o.elapsedHours);
+                        html += `<tr><td><b>${o.orderNumber}</b></td><td>${o.deliveryCity||'-'}</td><td class="${cls}">${o.elapsedHours} ساعة</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('stuckTable').innerHTML = html;
+                }
+
+                // Pending quotes
+                if (!d.pendingQuotes.length) {
+                    document.getElementById('pendingQuotesTable').innerHTML = '<div class="no-data">✅ لا توجد عروض معلقة</div>';
+                } else {
+                    let html = `<table><thead><tr><th>الطلب</th><th>المورد</th><th>المنتج</th><th>منذ (ساعة)</th></tr></thead><tbody>`;
+                    for (const q of d.pendingQuotes) {
+                        const cls = elapsedClass(q.elapsedHours);
+                        const so = q.salesOrder ? q.salesOrder.orderNumber : '-';
+                        const sup = q.supplier ? q.supplier.nameAr : '-';
+                        html += `<tr><td>${so}</td><td>${sup}</td><td>${q.productNameAr||'-'}</td><td class="${cls}">${q.elapsedHours} ساعة</td></tr>`;
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('pendingQuotesTable').innerHTML = html;
+                }
+
+                // Status summary
+                const statusLabels = {
+                    draft: 'مسودة', submitted_to_procurement: 'أرسل للمشتريات',
+                    procurement_responded: 'رد المشتريات', confirmed: 'مؤكد', cancelled: 'ملغي'
+                };
+                if (!d.orderStatusCounts.length) {
+                    document.getElementById('statusSummary').innerHTML = '<div class="no-data">لا توجد طلبات</div>';
+                } else {
+                    let html = '<div class="status-grid">';
+                    for (const s of d.orderStatusCounts) {
+                        html += `<div class="status-item"><div class="count">${s.count}</div><div class="label">${statusLabels[s._id] || s._id}</div></div>`;
+                    }
+                    html += '</div>';
+                    document.getElementById('statusSummary').innerHTML = html;
+                }
+            } catch(err) {
+                document.getElementById('kpiGrid').innerHTML = '<div class="kpi-card danger"><div class="kpi-label">خطأ في تحميل البيانات</div></div>';
+            }
+        }
+
+        loadKPIs();
+        // Auto-refresh every 5 minutes
+        setInterval(loadKPIs, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

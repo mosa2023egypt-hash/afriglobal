@@ -1,37 +1,42 @@
-// auth.js
-
 const jwt = require('jsonwebtoken');
-const secretKey = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'afriglobal-secret-key-change-in-production';
 
-// Middleware to verify JWT token
 function verifyToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.status(403).send('Access denied. No token provided.');
-    jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) return res.status(401).send('Invalid token.');
-        req.user = decoded;  // Save decoded user info in request
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'مطلوب تسجيل الدخول' });
+    }
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
         next();
-    });
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'جلسة غير صالحة، يرجى تسجيل الدخول مجدداً' });
+    }
 }
 
-// Middleware to check user role
-function checkRole(roles) {
+function requireRoles(...roles) {
     return (req, res, next) => {
-        if (!req.user || !req.user.role || !roles.includes(req.user.role)) {
-            return res.status(403).send('Access denied. Insufficient role.');
+        if (!req.user) return res.status(401).json({ success: false, message: 'مطلوب تسجيل الدخول' });
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ success: false, message: 'ليس لديك صلاحية للوصول إلى هذه الصفحة' });
         }
         next();
     };
 }
 
-// Middleware to check permissions
+const isGM = requireRoles('gm');
+const isManager = requireRoles('gm', 'sales_manager', 'procurement_manager');
+const isSales = requireRoles('gm', 'sales_manager', 'sales');
+const isProcurement = requireRoles('gm', 'procurement_manager', 'procurement');
+const isProcurementManager = requireRoles('gm', 'procurement_manager');
+const isSalesManager = requireRoles('gm', 'sales_manager');
+
+function checkRole(roles) { return requireRoles(...roles); }
+// Legacy stub - not enforced. Use requireRoles() for actual authorization.
 function checkPermission(permission) {
-    return (req, res, next) => {
-        if (!req.user || !req.user.permissions || !req.user.permissions.includes(permission)) {
-            return res.status(403).send('Access denied. Insufficient permissions.');
-        }
-        next();
-    };
+    return (req, res, next) => next();
 }
 
-module.exports = { verifyToken, checkRole, checkPermission };
+module.exports = { verifyToken, requireRoles, checkRole, checkPermission, isGM, isManager, isSales, isProcurement, isProcurementManager, isSalesManager };

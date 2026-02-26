@@ -1,26 +1,65 @@
 const express = require('express');
 const path = require('path');
 const connectDB = require('./config/database');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
 
 connectDB();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/customers', require('./routes/customers'));
-app.use('/api/suppliers', require('./routes/suppliers'));
-app.use('/api/warehouse', require('./routes/warehouse'));
-app.use('/api/accounting', require('./routes/accounting'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/reports', require('./routes/reports'));
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/departments', require('./routes/departments'));
-app.use('/api/permissions', require('./routes/permissions'));
-app.use('/api/roles', require('./routes/roles'));
+
+// Rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'طلبات كثيرة جداً، يرجى المحاولة لاحقاً' }
+});
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'عدد كبير من محاولات الدخول، يرجى الانتظار' }
+});
+
+// API routes
+app.use('/api/auth', authLimiter, require('./routes/auth'));
+app.use('/api/companies', apiLimiter, require('./routes/companies'));
+app.use('/api/sales-orders', apiLimiter, require('./routes/salesOrders'));
+app.use('/api/procurement', apiLimiter, require('./routes/procurement'));
+app.use('/api/approvals', apiLimiter, require('./routes/approvals'));
+app.use('/api/dashboard', apiLimiter, require('./routes/dashboard'));
+app.use('/api/products', apiLimiter, require('./routes/products'));
+app.use('/api/orders', apiLimiter, require('./routes/orders'));
+app.use('/api/customers', apiLimiter, require('./routes/customers'));
+app.use('/api/suppliers', apiLimiter, require('./routes/suppliers'));
+app.use('/api/warehouse', apiLimiter, require('./routes/warehouse'));
+app.use('/api/accounting', apiLimiter, require('./routes/accounting'));
+app.use('/api/reports', apiLimiter, require('./routes/reports'));
+app.use('/api/users', apiLimiter, require('./routes/users'));
+app.use('/api/departments', apiLimiter, require('./routes/departments'));
+app.use('/api/permissions', apiLimiter, require('./routes/permissions'));
+app.use('/api/roles', apiLimiter, require('./routes/roles'));
+
+const pageLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// HTML pages
+app.get('/', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/login', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/sales', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'sales.html')));
+app.get('/procurement', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'procurement.html')));
+app.get('/approvals', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'approvals.html')));
+app.get('/gm-dashboard', pageLimiter, (req, res) => res.sendFile(path.join(__dirname, 'public', 'gm-dashboard.html')));
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
