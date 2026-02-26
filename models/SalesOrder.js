@@ -31,8 +31,17 @@ const salesOrderSchema = new mongoose.Schema({
 
 salesOrderSchema.pre('save', async function(next) {
     if (!this.orderNumber) {
-        const count = await mongoose.model('SalesOrder').countDocuments();
-        this.orderNumber = `SO-${String(count + 1).padStart(5, '0')}`;
+        // Use findOneAndUpdate on a counters collection for atomic sequence generation
+        const Counter = mongoose.models.Counter || mongoose.model('Counter', new mongoose.Schema({
+            _id: String,
+            seq: { type: Number, default: 0 }
+        }));
+        const counter = await Counter.findByIdAndUpdate(
+            'salesOrder',
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        this.orderNumber = `SO-${String(counter.seq).padStart(5, '0')}`;
     }
     next();
 });

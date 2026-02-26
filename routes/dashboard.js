@@ -76,6 +76,7 @@ router.get('/kpi', verifyToken, requireRoles('gm', 'sales_manager', 'procurement
     }
 });
 
+// TODO: Implement actual statistics aggregation from SalesOrder/SupplierQuote/User collections
 router.get('/statistics', verifyToken, (req, res) => {
     res.json({ success: true, data: { totalUsers: 0, totalSales: 0, totalRevenue: 0 } });
 });

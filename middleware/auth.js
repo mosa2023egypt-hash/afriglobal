@@ -34,6 +34,7 @@ const isProcurementManager = requireRoles('gm', 'procurement_manager');
 const isSalesManager = requireRoles('gm', 'sales_manager');
 
 function checkRole(roles) { return requireRoles(...roles); }
+// Legacy stub - not enforced. Use requireRoles() for actual authorization.
 function checkPermission(permission) {
     return (req, res, next) => next();
 }
