@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfriGlobal – لوحة التحكم</title>
+  <style>
+    /* ── Variables ── */
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #1e429f;
+      --accent: #16a34a;
+      --danger: #dc2626;
+      --warn: #d97706;
+      --bg: #f1f5f9;
+      --sidebar-bg: #0f172a;
+      --sidebar-hover: #1e293b;
+      --sidebar-active: #1a56db;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,0.08);
+      --sidebar-w: 240px;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI','Arial',sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; bottom: 0; left: 0;
+      z-index: 100;
+      transition: transform .3s;
+    }
+    [dir="ltr"] .sidebar { left: auto; right: 0; }
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .sidebar-brand .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-brand .icon { font-size: 26px; }
+    .sidebar-brand h2 { color: #fff; font-size: 16px; font-weight: 700; }
+    .sidebar-brand p { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 10px 0; }
+    .nav-section { padding: 12px 16px 4px; color: #475569; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 18px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 13.5px;
+      border-radius: 0;
+      transition: background .15s, color .15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--sidebar-hover); color: #e2e8f0; }
+    .nav-item.active { background: var(--sidebar-active); color: #fff; }
+    .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer {
+      padding: 14px 18px;
+      border-top: 1px solid #1e293b;
+    }
+    .user-card { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { color: #e2e8f0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { color: #64748b; font-size: 11px; }
+    .logout-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      transition: color .15s;
+    }
+    .logout-btn:hover { color: var(--danger); }
+
+    /* ── Main ── */
+    .main {
+      margin-right: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    [dir="ltr"] .main { margin-right: 0; margin-left: var(--sidebar-w); }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow);
+    }
+    .topbar-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .topbar-actions { display: flex; align-items: center; gap: 14px; }
+    .topbar-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background .15s;
+    }
+    .topbar-btn:hover { background: var(--bg); }
+    .notif-badge {
+      position: relative;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    .badge {
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      background: var(--danger);
+      color: #fff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    /* ── Content ── */
+    .content { flex: 1; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Section Header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .section-header h2 { font-size: 19px; font-weight: 700; }
+
+    /* ── Stats Cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      border-right: 4px solid var(--primary);
+    }
+    .stat-card.green { border-right-color: var(--accent); }
+    .stat-card.orange { border-right-color: var(--warn); }
+    .stat-card.red { border-right-color: var(--danger); }
+    [dir="ltr"] .stat-card { border-right: none; border-left: 4px solid var(--primary); }
+    [dir="ltr"] .stat-card.green { border-left-color: var(--accent); }
+    [dir="ltr"] .stat-card.orange { border-left-color: var(--warn); }
+    [dir="ltr"] .stat-card.red { border-left-color: var(--danger); }
+    .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--text); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th { background: #f8fafc; color: var(--muted); font-weight: 600; font-size: 12px; padding: 10px 14px; text-align: right; border-bottom: 1px solid var(--border); }
+    [dir="ltr"] th { text-align: left; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-success { background: var(--accent); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-warn { background: var(--warn); color: #fff; }
+    .btn-ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    /* ── Badge / Status ── */
+    .status {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-draft { background: #f1f5f9; color: var(--muted); }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-reserved { background: #dbeafe; color: #1e40af; }
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    .status-received { background: #dcfce7; color: #166534; }
+    .status-sent { background: #ede9fe; color: #6d28d9; }
+    .status-partial { background: #fef3c7; color: #92400e; }
+    .status-expired { background: #fee2e2; color: #991b1b; }
+    .status-nearexpiry { background: #fef9c3; color: #854d0e; }
+
+    /* ── Forms ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid.cols-3 { grid-template-columns: repeat(3,1fr); }
+    .form-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 13.5px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+    }
+
+    /* ── Modals ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* ── Alerts / Toasts ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    [dir="ltr"] .toast-container { left: auto; right: 24px; }
+    .toast {
+      background: var(--text);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      animation: slideUp .3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 320px;
+    }
+    .toast.success { background: var(--accent); }
+    .toast.error { background: var(--danger); }
+    .toast.warn { background: var(--warn); }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Alert Panel ── */
+    .alert-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13.5px;
+    }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-icon { font-size: 18px; }
+
+    /* ── Print ── */
+    @media print {
+      .sidebar, .topbar, .no-print { display: none !important; }
+      .main { margin: 0 !important; }
+      .content { padding: 0 !important; }
+      table { font-size: 11px; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(100%); }
+      [dir="ltr"] .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-right: 0 !important; margin-left: 0 !important; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Misc ── */
+    .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+    .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+    .text-right { text-align: right; }
+    .text-danger { color: var(--danger); }
+    .text-success { color: var(--accent); }
+    .text-muted { color: var(--muted); }
+    .mt-16 { margin-top: 16px; }
+    .gap-8 { gap: 8px; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .w-full { width: 100%; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-row">
+      <span class="icon">🌍</span>
+      <div>
+        <h2>AfriGlobal</h2>
+        <p id="sb-subtitle">نظام الإدارة المتكامل</p>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" id="sidebar-nav">
+    <!-- populated by JS based on role -->
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="avatar-initials">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-username">–</div>
+        <div class="user-role" id="sidebar-role">–</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="تسجيل الخروج">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main" id="main-area">
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="flex items-center gap-8">
+      <button class="btn btn-ghost btn-sm no-print" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none" id="menu-toggle">☰</button>
+      <span class="topbar-title" id="page-title">لوحة التحكم</span>
+    </div>
+    <div class="topbar-actions">
+      <div class="notif-badge no-print" onclick="navigate('alerts')" title="التنبيهات">
+        🔔<span class="badge" id="alert-badge">0</span>
+      </div>
+      <button class="topbar-btn no-print" onclick="toggleLang()">🌐 <span id="lang-lbl">EN</span></button>
+      <button class="topbar-btn no-print" onclick="window.print()">🖨️ <span data-i18n="print">طباعة</span></button>
+    </div>
+  </header>
+
+  <!-- Pages -->
+  <div class="content">
+
+    <!-- ─── DASHBOARD ─── -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-header">
+        <h2 data-i18n="dashboard">لوحة التحكم</h2>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div id="dashboard-alerts"></div>
+    </div>
+
+    <!-- ─── ITEMS ─── -->
+    <div class="page" id="page-items">
+      <div class="section-header">
+        <h2 data-i18n="items">إدارة الأصناف</h2>
+        <button class="btn btn-primary no-print" onclick="openItemModal()">+ <span data-i18n="add_item">إضافة صنف</span></button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="items-table">
+            <thead>
+              <tr>
+                <th data-i18n="sku">الرمز</th>
+                <th data-i18n="name">الاسم</th>
+                <th data-i18n="category">الفئة</th>
+                <th data-i18n="unit">الوحدة</th>
+                <th data-i18n="price">السعر</th>
+                <th data-i18n="stock">المخزون</th>
+                <th data-i18n="min_stock">الحد الأدنى</th>
+                <th data-i18n="expiry">تاريخ الانتهاء</th>
+                <th class="no-print" data-i18n="actions">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="items-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SUPPLIERS ─── -->
+    <div class="page" id="page-suppliers">
+      <div class="section-header">
+        <h2 data-i18n="suppliers">إدارة الموردين</h2>
+        <button class="btn btn-primary no-print" onclick="openSupplierModal()">+ <span data-i18n="add_supplier">إضافة مورد</span></button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="name">الاسم</th>
+                <th data-i18n="contact">جهة الاتصال</th>
+                <th data-i18n="phone">الهاتف</th>
+                <th data-i18n="email">البريد</th>
+                <th data-i18n="balance">الرصيد</th>
+                <th class="no-print" data-i18n="actions">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="suppliers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CUSTOMERS ─── -->
+    <div class="page" id="page-customers">
+      <div class="section-header">
+        <h2 data-i18n="customers">إدارة العملاء</h2>
+        <button class="btn btn-primary no-print" onclick="openCustomerModal()">+ <span data-i18n="add_customer">إضافة عميل</span></button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="name">الاسم</th>
+                <th data-i18n="contact">جهة الاتصال</th>
+                <th data-i18n="phone">الهاتف</th>
+                <th data-i18n="credit_limit">حد الائتمان</th>
+                <th data-i18n="balance">الرصيد المستحق</th>
+                <th class="no-print" data-i18n="actions">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="customers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PURCHASES ─── -->
+    <div class="page" id="page-purchases">
+      <div class="section-header">
+        <h2 data-i18n="purchases">أوامر الشراء</h2>
+        <button class="btn btn-primary no-print" onclick="openPurchaseModal()">+ <span data-i18n="new_po">أمر شراء جديد</span></button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th data-i18n="date">التاريخ</th>
+                <th data-i18n="supplier">المورد</th>
+                <th data-i18n="total">الإجمالي</th>
+                <th data-i18n="status">الحالة</th>
+                <th class="no-print" data-i18n="actions">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="purchases-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── INVENTORY ─── -->
+    <div class="page" id="page-inventory">
+      <div class="section-header">
+        <h2 data-i18n="inventory">دفعات المخزون (FIFO)</h2>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="item">الصنف</th>
+                <th data-i18n="date">تاريخ الاستلام</th>
+                <th data-i18n="po">أمر الشراء</th>
+                <th data-i18n="qty_received">الكمية المستلمة</th>
+                <th data-i18n="qty_remaining">الكمية المتبقية</th>
+                <th data-i18n="cost">التكلفة/وحدة</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SALES ─── -->
+    <div class="page" id="page-sales">
+      <div class="section-header">
+        <h2 data-i18n="sales">أوامر البيع</h2>
+        <button class="btn btn-primary no-print" onclick="openSaleModal()">+ <span data-i18n="new_so">أمر بيع جديد</span></button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th data-i18n="date">التاريخ</th>
+                <th data-i18n="customer">العميل</th>
+                <th data-i18n="total">الإجمالي</th>
+                <th data-i18n="status">الحالة</th>
+                <th data-i18n="reservation">انتهاء الحجز</th>
+                <th class="no-print" data-i18n="actions">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="sales-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── REPORTS ─── -->
+    <div class="page" id="page-reports">
+      <div class="section-header">
+        <h2 data-i18n="reports">التقارير المالية</h2>
+        <div class="flex gap-8 no-print">
+          <input type="date" id="report-from" class="topbar-btn" style="border:1px solid var(--border);padding:6px 10px;border-radius:7px">
+          <input type="date" id="report-to"   class="topbar-btn" style="border:1px solid var(--border);padding:6px 10px;border-radius:7px">
+          <button class="btn btn-primary btn-sm" onclick="renderReports()">⟳ <span data-i18n="refresh">تحديث</span></button>
+        </div>
+      </div>
+      <div id="reports-content"></div>
+    </div>
+
+    <!-- ─── ALERTS ─── -->
+    <div class="page" id="page-alerts">
+      <div class="section-header">
+        <h2 data-i18n="alerts">تنبيهات النظام</h2>
+      </div>
+      <div class="card" id="alerts-list"></div>
+    </div>
+
+  </div><!-- .content -->
+</div><!-- .main -->
+</div><!-- .layout -->
+
+<!-- ══════════════ TOAST CONTAINER ══════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Item Modal -->
+<div class="modal-overlay" id="modal-item">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="item-modal-title">إضافة صنف</span>
+      <button class="modal-close" onclick="closeModal('modal-item')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="item-form" class="form-grid">
+        <input type="hidden" id="item-id">
+        <div class="form-group">
+          <label data-i18n="name_ar">الاسم (عربي)</label>
+          <input type="text" id="item-name-ar" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="name_en">الاسم (إنجليزي)</label>
+          <input type="text" id="item-name-en">
+        </div>
+        <div class="form-group">
+          <label data-i18n="sku">الرمز (SKU)</label>
+          <input type="text" id="item-sku" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="category">الفئة</label>
+          <input type="text" id="item-category">
+        </div>
+        <div class="form-group">
+          <label data-i18n="unit">وحدة القياس</label>
+          <select id="item-unit">
+            <option value="pcs">قطعة</option>
+            <option value="kg">كيلوجرام</option>
+            <option value="liter">لتر</option>
+            <option value="box">صندوق</option>
+            <option value="carton">كرتون</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="sell_price">سعر البيع</label>
+          <input type="number" id="item-price" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="min_stock">الحد الأدنى للمخزون</label>
+          <input type="number" id="item-min-stock" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label data-i18n="expiry">تاريخ الانتهاء (اختياري)</label>
+          <input type="date" id="item-expiry">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-item')" data-i18n="cancel">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveItem()" data-i18n="save">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Modal -->
+<div class="modal-overlay" id="modal-supplier">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="supplier-modal-title">إضافة مورد</span>
+      <button class="modal-close" onclick="closeModal('modal-supplier')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="supplier-form" class="form-grid">
+        <input type="hidden" id="supplier-id">
+        <div class="form-group">
+          <label data-i18n="name_ar">الاسم (عربي)</label>
+          <input type="text" id="supplier-name-ar" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="name_en">الاسم (إنجليزي)</label>
+          <input type="text" id="supplier-name-en">
+        </div>
+        <div class="form-group">
+          <label data-i18n="contact">جهة الاتصال</label>
+          <input type="text" id="supplier-contact">
+        </div>
+        <div class="form-group">
+          <label data-i18n="phone">الهاتف</label>
+          <input type="text" id="supplier-phone">
+        </div>
+        <div class="form-group form-full">
+          <label data-i18n="email">البريد الإلكتروني</label>
+          <input type="email" id="supplier-email">
+        </div>
+        <div class="form-group form-full">
+          <label data-i18n="address">العنوان</label>
+          <textarea id="supplier-address" rows="2"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-supplier')" data-i18n="cancel">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveSupplier()" data-i18n="save">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Modal -->
+<div class="modal-overlay" id="modal-customer">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="customer-modal-title">إضافة عميل</span>
+      <button class="modal-close" onclick="closeModal('modal-customer')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="customer-form" class="form-grid">
+        <input type="hidden" id="customer-id">
+        <div class="form-group">
+          <label data-i18n="name_ar">الاسم (عربي)</label>
+          <input type="text" id="customer-name-ar" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="name_en">الاسم (إنجليزي)</label>
+          <input type="text" id="customer-name-en">
+        </div>
+        <div class="form-group">
+          <label data-i18n="contact">جهة الاتصال</label>
+          <input type="text" id="customer-contact">
+        </div>
+        <div class="form-group">
+          <label data-i18n="phone">الهاتف</label>
+          <input type="text" id="customer-phone">
+        </div>
+        <div class="form-group">
+          <label data-i18n="email">البريد الإلكتروني</label>
+          <input type="email" id="customer-email">
+        </div>
+        <div class="form-group">
+          <label data-i18n="credit_limit">حد الائتمان</label>
+          <input type="number" id="customer-credit" min="0" step="0.01" value="0">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-customer')" data-i18n="cancel">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveCustomer()" data-i18n="save">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase Order Modal -->
+<div class="modal-overlay" id="modal-purchase">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <span data-i18n="new_po">أمر شراء جديد</span>
+      <button class="modal-close" onclick="closeModal('modal-purchase')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label data-i18n="supplier">المورد</label>
+          <select id="po-supplier"></select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="date">التاريخ</label>
+          <input type="date" id="po-date">
+        </div>
+      </div>
+      <hr>
+      <div class="section-header mt-16">
+        <strong data-i18n="items">الأصناف</strong>
+        <button class="btn btn-ghost btn-sm" onclick="addPOLine()">+ <span data-i18n="add_line">إضافة سطر</span></button>
+      </div>
+      <div id="po-lines"></div>
+      <hr>
+      <div style="text-align:left;font-weight:700;font-size:15px">
+        <span data-i18n="total">الإجمالي</span>: <span id="po-total">0.00</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-purchase')" data-i18n="cancel">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePO()" data-i18n="save">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receive Goods Modal -->
+<div class="modal-overlay" id="modal-receive">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span data-i18n="receive_goods">استلام بضاعة</span>
+      <button class="modal-close" onclick="closeModal('modal-receive')">×</button>
+    </div>
+    <div class="modal-body" id="receive-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-receive')" data-i18n="cancel">إلغاء</button>
+      <button class="btn btn-success" onclick="confirmReceive()" data-i18n="receive">تأكيد الاستلام</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale Order Modal -->
+<div class="modal-overlay" id="modal-sale">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <span data-i18n="new_so">أمر بيع جديد</span>
+      <button class="modal-close" onclick="closeModal('modal-sale')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label data-i18n="customer">العميل</label>
+          <select id="so-customer"></select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="date">التاريخ</label>
+          <input type="date" id="so-date">
+        </div>
+      </div>
+      <hr>
+      <div class="section-header mt-16">
+        <strong data-i18n="items">الأصناف</strong>
+        <button class="btn btn-ghost btn-sm" onclick="addSOLine()">+ <span data-i18n="add_line">إضافة سطر</span></button>
+      </div>
+      <div id="so-lines"></div>
+      <hr>
+      <div style="text-align:left;font-weight:700;font-size:15px">
+        <span data-i18n="total">الإجمالي</span>: <span id="so-total">0.00</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-sale')" data-i18n="cancel">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveSO()" data-i18n="save_draft">حفظ كمسودة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale Detail Modal -->
+<div class="modal-overlay" id="modal-sale-detail">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span data-i18n="sale_detail">تفاصيل أمر البيع</span>
+      <button class="modal-close" onclick="closeModal('modal-sale-detail')">×</button>
+    </div>
+    <div class="modal-body" id="sale-detail-body"></div>
+    <div class="modal-footer" id="sale-detail-footer"></div>
+  </div>
+</div>
+
+<!-- ══════════════ JAVASCRIPT ══════════════ -->
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG & CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+
+const USERS = [
+  { username: 'admin',       password: 'admin123', role: 'admin',       nameAr: 'مدير النظام',      nameEn: 'System Admin' },
+  { username: 'accountant',  password: 'acc123',   role: 'accountant',  nameAr: 'المحاسب',          nameEn: 'Accountant' },
+  { username: 'procurement', password: 'proc123',  role: 'procurement', nameAr: 'مسؤول المشتريات', nameEn: 'Procurement Officer' },
+  { username: 'warehouse',   password: 'ware123',  role: 'warehouse',   nameAr: 'مسؤول المخزن',    nameEn: 'Warehouse Manager' },
+  { username: 'sales',       password: 'sales123', role: 'sales',       nameAr: 'مسؤول المبيعات',  nameEn: 'Sales Officer' },
+];
+
+const PERMISSIONS = {
+  admin:       ['dashboard','items','suppliers','customers','purchases','inventory','sales','reports','alerts'],
+  accountant:  ['dashboard','reports'],
+  procurement: ['dashboard','items','suppliers','purchases'],
+  warehouse:   ['dashboard','inventory','alerts'],
+  sales:       ['dashboard','items','customers','sales'],
+};
+
+const NAV_ITEMS = [
+  { id: 'dashboard',  icon: '📊', labelAr: 'لوحة التحكم',    labelEn: 'Dashboard',   section: null },
+  { id: 'items',      icon: '📦', labelAr: 'الأصناف',         labelEn: 'Items',       section: 'inventory' },
+  { id: 'suppliers',  icon: '🏭', labelAr: 'الموردون',        labelEn: 'Suppliers',   section: 'procurement' },
+  { id: 'customers',  icon: '👥', labelAr: 'العملاء',         labelEn: 'Customers',   section: 'sales_dept' },
+  { id: 'purchases',  icon: '🛒', labelAr: 'أوامر الشراء',   labelEn: 'Purchases',   section: 'procurement' },
+  { id: 'inventory',  icon: '🗄️', labelAr: 'المخزون (FIFO)', labelEn: 'Inventory',   section: 'inventory' },
+  { id: 'sales',      icon: '💼', labelAr: 'أوامر البيع',    labelEn: 'Sales Orders',section: 'sales_dept' },
+  { id: 'reports',    icon: '📈', labelAr: 'التقارير',        labelEn: 'Reports',     section: 'finance' },
+  { id: 'alerts',     icon: '🔔', labelAr: 'التنبيهات',       labelEn: 'Alerts',      section: 'system' },
+];
+
+const SECTION_LABELS = {
+  inventory:    { ar: 'المخزون والأصناف', en: 'Inventory' },
+  procurement:  { ar: 'المشتريات',        en: 'Procurement' },
+  sales_dept:   { ar: 'المبيعات',         en: 'Sales' },
+  finance:      { ar: 'المالية',          en: 'Finance' },
+  system:       { ar: 'النظام',           en: 'System' },
+};
+
+// i18n strings
+const I18N = {
+  ar: {
+    dashboard:'لوحة التحكم', items:'الأصناف', suppliers:'الموردون', customers:'العملاء',
+    purchases:'أوامر الشراء', inventory:'المخزون', sales:'أوامر البيع', reports:'التقارير',
+    alerts:'التنبيهات', print:'طباعة', add_item:'إضافة صنف', add_supplier:'إضافة مورد',
+    add_customer:'إضافة عميل', new_po:'أمر شراء جديد', new_so:'أمر بيع جديد',
+    save:'حفظ', cancel:'إلغاء', actions:'الإجراءات', name:'الاسم', sku:'الرمز',
+    category:'الفئة', unit:'الوحدة', price:'السعر', stock:'المخزون', min_stock:'الحد الأدنى',
+    expiry:'الانتهاء', contact:'جهة الاتصال', phone:'الهاتف', email:'البريد',
+    balance:'الرصيد', credit_limit:'حد الائتمان', date:'التاريخ', supplier:'المورد',
+    customer:'العميل', total:'الإجمالي', status:'الحالة', reservation:'انتهاء الحجز',
+    qty_received:'المستلم', qty_remaining:'المتبقي', cost:'التكلفة', po:'أمر الشراء',
+    item:'الصنف', refresh:'تحديث', name_ar:'الاسم (عربي)', name_en:'الاسم (إنجليزي)',
+    sell_price:'سعر البيع', address:'العنوان', add_line:'إضافة سطر',
+    receive_goods:'استلام بضاعة', receive:'تأكيد الاستلام', sale_detail:'تفاصيل أمر البيع',
+    save_draft:'حفظ كمسودة', qty:'الكمية', subtotal:'الإجمالي الفرعي',
+    total_items:'إجمالي الأصناف', total_suppliers:'إجمالي الموردين',
+    total_customers:'إجمالي العملاء', total_revenue:'إجمالي الإيرادات',
+    low_stock:'تحذير: مخزون منخفض', expired:'منتهي الصلاحية', near_expiry:'قريب الانتهاء',
+    reserved:'محجوز', completed:'مكتمل', cancelled:'ملغي', pending:'قيد المراجعة',
+    draft:'مسودة', sent:'مُرسل', received:'مُستلم', partial:'جزئي',
+    review:'مراجعة', reserve:'حجز 24 ساعة', complete_sale:'إكمال البيع',
+    cancel_sale:'إلغاء', pl_report:'تقرير الأرباح والخسائر',
+    revenue:'الإيرادات', cogs:'تكلفة البضاعة المباعة', gross_profit:'الربح الإجمالي',
+    receivables:'الذمم المدينة', customer_balance:'رصيد العميل',
+    no_data:'لا توجد بيانات', edit:'تعديل', delete:'حذف',
+    confirm_delete:'هل تريد الحذف؟', insufficient_stock:'مخزون غير كافٍ', no_alerts:'لا توجد تنبيهات',
+  },
+  en: {
+    dashboard:'Dashboard', items:'Items', suppliers:'Suppliers', customers:'Customers',
+    purchases:'Purchases', inventory:'Inventory', sales:'Sales', reports:'Reports',
+    alerts:'Alerts', print:'Print', add_item:'Add Item', add_supplier:'Add Supplier',
+    add_customer:'Add Customer', new_po:'New Purchase Order', new_so:'New Sales Order',
+    save:'Save', cancel:'Cancel', actions:'Actions', name:'Name', sku:'SKU',
+    category:'Category', unit:'Unit', price:'Price', stock:'Stock', min_stock:'Min Stock',
+    expiry:'Expiry', contact:'Contact', phone:'Phone', email:'Email',
+    balance:'Balance', credit_limit:'Credit Limit', date:'Date', supplier:'Supplier',
+    customer:'Customer', total:'Total', status:'Status', reservation:'Reservation Expires',
+    qty_received:'Received Qty', qty_remaining:'Remaining', cost:'Cost', po:'PO',
+    item:'Item', refresh:'Refresh', name_ar:'Name (Arabic)', name_en:'Name (English)',
+    sell_price:'Sell Price', address:'Address', add_line:'Add Line',
+    receive_goods:'Receive Goods', receive:'Confirm Receipt', sale_detail:'Sale Order Detail',
+    save_draft:'Save as Draft', qty:'Qty', subtotal:'Subtotal',
+    total_items:'Total Items', total_suppliers:'Total Suppliers',
+    total_customers:'Total Customers', total_revenue:'Total Revenue',
+    low_stock:'Warning: Low Stock', expired:'Expired', near_expiry:'Near Expiry',
+    reserved:'Reserved', completed:'Completed', cancelled:'Cancelled', pending:'Pending Review',
+    draft:'Draft', sent:'Sent', received:'Received', partial:'Partial',
+    review:'Review', reserve:'Reserve 24h', complete_sale:'Complete Sale',
+    cancel_sale:'Cancel', pl_report:'P&L Report',
+    revenue:'Revenue', cogs:'COGS', gross_profit:'Gross Profit',
+    receivables:'Receivables', customer_balance:'Customer Balance',
+    no_data:'No data found', edit:'Edit', delete:'Delete',
+    confirm_delete:'Are you sure you want to delete?', insufficient_stock:'Insufficient stock', no_alerts:'No alerts',
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let session = null;
+let lang = 'ar';
+let currentPage = 'dashboard';
+let activePOId = null;   // for receive goods
+let poLineCount = 0;
+let soLineCount = 0;
+
+// ── Storage helpers ──
+function ls(key, def = []) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
+}
+function lsSet(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function getData(key)       { return ls('ag_' + key, []); }
+function setData(key, arr)  { lsSet('ag_' + key, arr); }
+
+function nextId(arr) {
+  return arr.length ? Math.max(...arr.map(x => x.id || 0)) + 1 : 1;
+}
+
+// ── i18n ──
+function t(key) { return I18N[lang][key] || I18N['ar'][key] || key; }
+
+// ── Auth ──
+function getSession() {
+  return JSON.parse(localStorage.getItem('ag_session') || 'null');
+}
+function logout() {
+  localStorage.removeItem('ag_session');
+  window.location.href = 'index.html';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  session = getSession();
+  if (!session) { window.location.href = 'index.html'; return; }
+
+  lang = localStorage.getItem('ag_lang') || 'ar';
+  applyLang();
+  buildNav();
+  updateUserBar();
+  seedDemoData();
+  navigate('dashboard');
+}
+
+function applyLang() {
+  const isAr = lang === 'ar';
+  document.getElementById('html-root').setAttribute('lang', lang);
+  document.getElementById('html-root').setAttribute('dir', isAr ? 'rtl' : 'ltr');
+  document.getElementById('lang-lbl').textContent = isAr ? 'EN' : 'عر';
+  document.getElementById('sb-subtitle').textContent = isAr ? 'نظام الإدارة المتكامل' : 'Integrated Management System';
+
+  // Apply data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (I18N[lang][key]) el.textContent = I18N[lang][key];
+  });
+}
+
+function toggleLang() {
+  lang = lang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('ag_lang', lang);
+  applyLang();
+  buildNav();
+  renderCurrentPage();
+}
+
+function updateUserBar() {
+  const nameKey = lang === 'ar' ? 'nameAr' : 'nameEn';
+  document.getElementById('sidebar-username').textContent = session[nameKey] || session.username;
+  document.getElementById('sidebar-role').textContent = USERS.find(u => u.username === session.username)?.[nameKey] || session.role;
+  document.getElementById('avatar-initials').textContent = (session[nameKey] || session.username).charAt(0).toUpperCase();
+}
+
+function buildNav() {
+  const perms = PERMISSIONS[session.role] || [];
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = '';
+
+  let lastSection = null;
+  NAV_ITEMS.forEach(item => {
+    if (!perms.includes(item.id)) return;
+    if (item.section !== lastSection) {
+      lastSection = item.section;
+      if (item.section) {
+        const sec = document.createElement('div');
+        sec.className = 'nav-section';
+        sec.textContent = SECTION_LABELS[item.section]?.[lang] || item.section;
+        nav.appendChild(sec);
+      }
+    }
+    const el = document.createElement('div');
+    el.className = 'nav-item' + (currentPage === item.id ? ' active' : '');
+    el.setAttribute('data-page', item.id);
+    el.innerHTML = `<span class="nav-icon">${item.icon}</span><span>${lang === 'ar' ? item.labelAr : item.labelEn}</span>`;
+    el.onclick = () => navigate(item.id);
+    nav.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function navigate(pageId) {
+  const perms = PERMISSIONS[session.role] || [];
+  if (!perms.includes(pageId)) { showToast(t('no_data'), 'error'); return; }
+
+  currentPage = pageId;
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId)?.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.getAttribute('data-page') === pageId);
+  });
+
+  const navItem = NAV_ITEMS.find(n => n.id === pageId);
+  document.getElementById('page-title').textContent = navItem ? (lang === 'ar' ? navItem.labelAr : navItem.labelEn) : pageId;
+
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  switch(currentPage) {
+    case 'dashboard': renderDashboard(); break;
+    case 'items':     renderItems();     break;
+    case 'suppliers': renderSuppliers(); break;
+    case 'customers': renderCustomers(); break;
+    case 'purchases': renderPurchases(); break;
+    case 'inventory': renderInventory(); break;
+    case 'sales':     renderSales();     break;
+    case 'reports':   renderReports();   break;
+    case 'alerts':    renderAlerts();    break;
+  }
+  updateAlertBadge();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '✅', error: '❌', warn: '⚠️' };
+  toast.innerHTML = `<span>${icons[type] || ''}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  SEED DEMO DATA
+// ═══════════════════════════════════════════════════════════════
+function seedDemoData() {
+  if (ls('ag_seeded', false)) return;
+
+  const suppliers = [
+    { id:1, nameAr:'شركة النيل للتوريدات', nameEn:'Nile Supplies Co.', contact:'Ahmed Ali', phone:'0501234567', email:'ahmed@nile.com', address:'القاهرة، مصر', balance:0 },
+    { id:2, nameAr:'مؤسسة الخليج التجارية', nameEn:'Gulf Trading Est.', contact:'Mohammed Salem', phone:'0551234567', email:'m.salem@gulf.com', address:'دبي، الإمارات', balance:0 },
+  ];
+  const customers = [
+    { id:1, nameAr:'مؤسسة الأمل', nameEn:'Al-Amal Est.', contact:'Sara Hassan', phone:'0561234567', email:'sara@alamal.com', creditLimit:50000, balance:0 },
+    { id:2, nameAr:'شركة النجوم', nameEn:'Stars Co.', contact:'Khalid Omar', phone:'0571234567', email:'khalid@stars.com', creditLimit:30000, balance:0 },
+  ];
+  const items = [
+    { id:1, nameAr:'زيت نباتي', nameEn:'Vegetable Oil', sku:'VEG-001', category:'مواد غذائية', unit:'liter', price:25, minStock:50, expiry:'' },
+    { id:2, nameAr:'سكر أبيض', nameEn:'White Sugar', sku:'SUG-001', category:'مواد غذائية', unit:'kg', price:8, minStock:100, expiry:'' },
+    { id:3, nameAr:'دقيق قمح', nameEn:'Wheat Flour', sku:'FLR-001', category:'مواد غذائية', unit:'kg', price:6, minStock:200, expiry:'' },
+  ];
+
+  setData('suppliers', suppliers);
+  setData('customers', customers);
+  setData('items', items);
+  setData('batches', []);
+  setData('purchases', []);
+  setData('sales', []);
+  lsSet('ag_seeded', true);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STOCK CALCULATION (FIFO)
+// ═══════════════════════════════════════════════════════════════
+function getStock(itemId) {
+  return getData('batches')
+    .filter(b => b.itemId === itemId)
+    .reduce((sum, b) => sum + b.remaining, 0);
+}
+
+/** Deduct qty from batches FIFO. Returns array of {batchId, qty, cost} or null if insufficient. */
+function fifoDeduct(itemId, qty) {
+  const batches = getData('batches')
+    .filter(b => b.itemId === itemId && b.remaining > 0)
+    .sort((a, b) => a.id - b.id); // oldest first
+
+  let needed = qty;
+  const used = [];
+  for (const batch of batches) {
+    if (needed <= 0) break;
+    const take = Math.min(batch.remaining, needed);
+    used.push({ batchId: batch.id, qty: take, cost: batch.cost });
+    needed -= take;
+  }
+  if (needed > 0) return null; // insufficient stock
+  return used;
+}
+
+function applyFifoDeduct(deductions) {
+  const batches = getData('batches');
+  deductions.forEach(d => {
+    const b = batches.find(x => x.id === d.batchId);
+    if (b) b.remaining -= d.qty;
+  });
+  setData('batches', batches);
+}
+
+function reverseFifoDeduct(deductions) {
+  const batches = getData('batches');
+  deductions.forEach(d => {
+    const b = batches.find(x => x.id === d.batchId);
+    if (b) b.remaining += d.qty;
+  });
+  setData('batches', batches);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const items = getData('items');
+  const suppliers = getData('suppliers');
+  const customers = getData('customers');
+  const sales = getData('sales');
+
+  const revenue = sales.filter(s => s.status === 'completed').reduce((sum, s) => sum + (s.totalRevenue || 0), 0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">${t('total_items')}</div>
+      <div class="stat-value">${items.length}</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">${t('total_suppliers')}</div>
+      <div class="stat-value">${suppliers.length}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">${t('total_customers')}</div>
+      <div class="stat-value">${customers.length}</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">${t('total_revenue')}</div>
+      <div class="stat-value">${fmtMoney(revenue)}</div>
+    </div>
+  `;
+
+  // Show active alerts
+  const alertsHtml = buildAlertsHtml(true);
+  document.getElementById('dashboard-alerts').innerHTML = alertsHtml
+    ? `<div class="card mt-16"><div class="card-header">🔔 ${t('alerts')}</div>${alertsHtml}</div>`
+    : '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ITEMS
+// ═══════════════════════════════════════════════════════════════
+function renderItems() {
+  const items = getData('items');
+  const tbody = document.getElementById('items-tbody');
+  if (!items.length) { tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${t('no_data')}</td></tr>`; return; }
+  tbody.innerHTML = items.map(item => {
+    const stock = getStock(item.id);
+    const stockClass = stock < item.minStock ? 'text-danger' : '';
+    const expiryDisplay = item.expiry ? fmtDate(item.expiry) : '–';
+    const expiryClass = item.expiry ? getExpiryClass(item.expiry) : '';
+    return `<tr>
+      <td>${item.sku}</td>
+      <td>${lang === 'ar' ? item.nameAr : (item.nameEn || item.nameAr)}</td>
+      <td>${item.category || '–'}</td>
+      <td>${item.unit}</td>
+      <td>${fmtMoney(item.price)}</td>
+      <td class="${stockClass}">${stock}</td>
+      <td>${item.minStock}</td>
+      <td class="${expiryClass}">${expiryDisplay}</td>
+      <td class="no-print">
+        <button class="btn btn-ghost btn-sm" onclick="openItemModal(${item.id})">${t('edit')}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">${t('delete')}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openItemModal(id = null) {
+  const items = getData('items');
+  const item = id ? items.find(i => i.id === id) : null;
+  document.getElementById('item-modal-title').textContent = item ? t('edit') + ' ' + t('item') : t('add_item');
+  document.getElementById('item-id').value = item?.id || '';
+  document.getElementById('item-name-ar').value = item?.nameAr || '';
+  document.getElementById('item-name-en').value = item?.nameEn || '';
+  document.getElementById('item-sku').value = item?.sku || '';
+  document.getElementById('item-category').value = item?.category || '';
+  document.getElementById('item-unit').value = item?.unit || 'pcs';
+  document.getElementById('item-price').value = item?.price || '';
+  document.getElementById('item-min-stock').value = item?.minStock ?? 0;
+  document.getElementById('item-expiry').value = item?.expiry || '';
+  openModal('modal-item');
+}
+
+function saveItem() {
+  const nameAr = document.getElementById('item-name-ar').value.trim();
+  const sku    = document.getElementById('item-sku').value.trim();
+  const price  = parseFloat(document.getElementById('item-price').value);
+  if (!nameAr || !sku || isNaN(price)) { showToast(t('no_data'), 'error'); return; }
+
+  const items = getData('items');
+  const id = document.getElementById('item-id').value;
+  const obj = {
+    id: id ? parseInt(id) : nextId(items),
+    nameAr, sku, price,
+    nameEn:   document.getElementById('item-name-en').value.trim(),
+    category: document.getElementById('item-category').value.trim(),
+    unit:     document.getElementById('item-unit').value,
+    minStock: parseInt(document.getElementById('item-min-stock').value) || 0,
+    expiry:   document.getElementById('item-expiry').value,
+  };
+
+  if (id) {
+    const idx = items.findIndex(i => i.id === parseInt(id));
+    if (idx >= 0) items[idx] = obj; else items.push(obj);
+  } else {
+    items.push(obj);
+  }
+  setData('items', items);
+  closeModal('modal-item');
+  renderItems();
+  showToast(t('save'));
+}
+
+function deleteItem(id) {
+  if (!confirm(t('confirm_delete'))) return;
+  setData('items', getData('items').filter(i => i.id !== id));
+  renderItems();
+  showToast(t('delete'), 'warn');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SUPPLIERS
+// ═══════════════════════════════════════════════════════════════
+function renderSuppliers() {
+  const suppliers = getData('suppliers');
+  const tbody = document.getElementById('suppliers-tbody');
+  if (!suppliers.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('no_data')}</td></tr>`; return; }
+  tbody.innerHTML = suppliers.map(s => `<tr>
+    <td>${lang === 'ar' ? s.nameAr : (s.nameEn || s.nameAr)}</td>
+    <td>${s.contact || '–'}</td>
+    <td>${s.phone || '–'}</td>
+    <td>${s.email || '–'}</td>
+    <td>${fmtMoney(s.balance || 0)}</td>
+    <td class="no-print">
+      <button class="btn btn-ghost btn-sm" onclick="openSupplierModal(${s.id})">${t('edit')}</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteSupplier(${s.id})">${t('delete')}</button>
+    </td>
+  </tr>`).join('');
+}
+
+function openSupplierModal(id = null) {
+  const suppliers = getData('suppliers');
+  const s = id ? suppliers.find(x => x.id === id) : null;
+  document.getElementById('supplier-modal-title').textContent = s ? t('edit') : t('add_supplier');
+  document.getElementById('supplier-id').value = s?.id || '';
+  document.getElementById('supplier-name-ar').value = s?.nameAr || '';
+  document.getElementById('supplier-name-en').value = s?.nameEn || '';
+  document.getElementById('supplier-contact').value = s?.contact || '';
+  document.getElementById('supplier-phone').value = s?.phone || '';
+  document.getElementById('supplier-email').value = s?.email || '';
+  document.getElementById('supplier-address').value = s?.address || '';
+  openModal('modal-supplier');
+}
+
+function saveSupplier() {
+  const nameAr = document.getElementById('supplier-name-ar').value.trim();
+  if (!nameAr) { showToast(t('no_data'), 'error'); return; }
+  const suppliers = getData('suppliers');
+  const id = document.getElementById('supplier-id').value;
+  const obj = {
+    id: id ? parseInt(id) : nextId(suppliers),
+    nameAr, balance: 0,
+    nameEn:   document.getElementById('supplier-name-en').value.trim(),
+    contact:  document.getElementById('supplier-contact').value.trim(),
+    phone:    document.getElementById('supplier-phone').value.trim(),
+    email:    document.getElementById('supplier-email').value.trim(),
+    address:  document.getElementById('supplier-address').value.trim(),
+  };
+  if (id) {
+    const existing = suppliers.find(x => x.id === parseInt(id));
+    if (existing) { obj.balance = existing.balance; Object.assign(existing, obj); }
+    else suppliers.push(obj);
+  } else {
+    suppliers.push(obj);
+  }
+  setData('suppliers', suppliers);
+  closeModal('modal-supplier');
+  renderSuppliers();
+  showToast(t('save'));
+}
+
+function deleteSupplier(id) {
+  if (!confirm(t('confirm_delete'))) return;
+  setData('suppliers', getData('suppliers').filter(s => s.id !== id));
+  renderSuppliers();
+  showToast(t('delete'), 'warn');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CUSTOMERS
+// ═══════════════════════════════════════════════════════════════
+function renderCustomers() {
+  const customers = getData('customers');
+  const tbody = document.getElementById('customers-tbody');
+  if (!customers.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('no_data')}</td></tr>`; return; }
+  tbody.innerHTML = customers.map(c => `<tr>
+    <td>${lang === 'ar' ? c.nameAr : (c.nameEn || c.nameAr)}</td>
+    <td>${c.contact || '–'}</td>
+    <td>${c.phone || '–'}</td>
+    <td>${fmtMoney(c.creditLimit || 0)}</td>
+    <td>${fmtMoney(c.balance || 0)}</td>
+    <td class="no-print">
+      <button class="btn btn-ghost btn-sm" onclick="openCustomerModal(${c.id})">${t('edit')}</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${c.id})">${t('delete')}</button>
+    </td>
+  </tr>`).join('');
+}
+
+function openCustomerModal(id = null) {
+  const customers = getData('customers');
+  const c = id ? customers.find(x => x.id === id) : null;
+  document.getElementById('customer-modal-title').textContent = c ? t('edit') : t('add_customer');
+  document.getElementById('customer-id').value = c?.id || '';
+  document.getElementById('customer-name-ar').value = c?.nameAr || '';
+  document.getElementById('customer-name-en').value = c?.nameEn || '';
+  document.getElementById('customer-contact').value = c?.contact || '';
+  document.getElementById('customer-phone').value = c?.phone || '';
+  document.getElementById('customer-email').value = c?.email || '';
+  document.getElementById('customer-credit').value = c?.creditLimit ?? 0;
+  openModal('modal-customer');
+}
+
+function saveCustomer() {
+  const nameAr = document.getElementById('customer-name-ar').value.trim();
+  if (!nameAr) { showToast(t('no_data'), 'error'); return; }
+  const customers = getData('customers');
+  const id = document.getElementById('customer-id').value;
+  const obj = {
+    id: id ? parseInt(id) : nextId(customers),
+    nameAr, balance: 0,
+    nameEn:      document.getElementById('customer-name-en').value.trim(),
+    contact:     document.getElementById('customer-contact').value.trim(),
+    phone:       document.getElementById('customer-phone').value.trim(),
+    email:       document.getElementById('customer-email').value.trim(),
+    creditLimit: parseFloat(document.getElementById('customer-credit').value) || 0,
+  };
+  if (id) {
+    const existing = customers.find(x => x.id === parseInt(id));
+    if (existing) { obj.balance = existing.balance; Object.assign(existing, obj); }
+    else customers.push(obj);
+  } else {
+    customers.push(obj);
+  }
+  setData('customers', customers);
+  closeModal('modal-customer');
+  renderCustomers();
+  showToast(t('save'));
+}
+
+function deleteCustomer(id) {
+  if (!confirm(t('confirm_delete'))) return;
+  setData('customers', getData('customers').filter(c => c.id !== id));
+  renderCustomers();
+  showToast(t('delete'), 'warn');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PURCHASE ORDERS
+// ═══════════════════════════════════════════════════════════════
+function renderPurchases() {
+  const purchases = getData('purchases');
+  const suppliers = getData('suppliers');
+  const tbody = document.getElementById('purchases-tbody');
+  if (!purchases.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('no_data')}</td></tr>`; return; }
+  tbody.innerHTML = [...purchases].reverse().map(po => {
+    const sup = suppliers.find(s => s.id === po.supplierId);
+    return `<tr>
+      <td>#${po.id}</td>
+      <td>${fmtDate(po.date)}</td>
+      <td>${sup ? (lang === 'ar' ? sup.nameAr : sup.nameEn || sup.nameAr) : '–'}</td>
+      <td>${fmtMoney(po.total)}</td>
+      <td><span class="status status-${po.status}">${t(po.status)}</span></td>
+      <td class="no-print">${po.status === 'sent'
+        ? `<button class="btn btn-success btn-sm" onclick="openReceiveModal(${po.id})">${t('receive_goods')}</button>`
+        : '<span class="text-muted">–</span>'
+      }</td>
+    </tr>`;
+  }).join('');
+}
+
+function openPurchaseModal() {
+  const suppliers = getData('suppliers');
+  const items = getData('items');
+
+  const supSelect = document.getElementById('po-supplier');
+  supSelect.innerHTML = suppliers.map(s => `<option value="${s.id}">${lang === 'ar' ? s.nameAr : s.nameEn || s.nameAr}</option>`).join('');
+
+  document.getElementById('po-date').value = today();
+  document.getElementById('po-lines').innerHTML = '';
+  document.getElementById('po-total').textContent = '0.00';
+  poLineCount = 0;
+
+  addPOLine();
+  openModal('modal-purchase');
+}
+
+function addPOLine() {
+  const items = getData('items');
+  const id = ++poLineCount;
+  const div = document.createElement('div');
+  div.id = `po-line-${id}`;
+  div.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px';
+  div.innerHTML = `
+    <div class="form-group">
+      <label>${t('item')}</label>
+      <select onchange="calcPOTotal()">
+        ${items.map(i => `<option value="${i.id}">${lang === 'ar' ? i.nameAr : i.nameEn || i.nameAr}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>${t('qty')}</label>
+      <input type="number" min="1" value="1" onchange="calcPOTotal()">
+    </div>
+    <div class="form-group">
+      <label>${t('cost')}</label>
+      <input type="number" min="0" step="0.01" value="0" onchange="calcPOTotal()">
+    </div>
+    <button class="btn btn-danger btn-sm" style="margin-bottom:0" onclick="document.getElementById('po-line-${id}').remove();calcPOTotal()">✕</button>
+  `;
+  document.getElementById('po-lines').appendChild(div);
+}
+
+function calcPOTotal() {
+  let total = 0;
+  document.querySelectorAll('#po-lines > div').forEach(row => {
+    const qty  = parseFloat(row.querySelectorAll('input')[0]?.value) || 0;
+    const cost = parseFloat(row.querySelectorAll('input')[1]?.value) || 0;
+    total += qty * cost;
+  });
+  document.getElementById('po-total').textContent = fmtMoney(total);
+}
+
+function savePO() {
+  const supplierId = parseInt(document.getElementById('po-supplier').value);
+  const date = document.getElementById('po-date').value;
+  const lines = [];
+  let total = 0;
+
+  document.querySelectorAll('#po-lines > div').forEach(row => {
+    const itemId = parseInt(row.querySelector('select').value);
+    const qty  = parseFloat(row.querySelectorAll('input')[0]?.value) || 0;
+    const cost = parseFloat(row.querySelectorAll('input')[1]?.value) || 0;
+    if (itemId && qty > 0) {
+      lines.push({ itemId, qty, cost });
+      total += qty * cost;
+    }
+  });
+
+  if (!supplierId || !lines.length) { showToast(t('no_data'), 'error'); return; }
+
+  const purchases = getData('purchases');
+  const po = { id: nextId(purchases), supplierId, date, lines, total, status: 'sent' };
+  purchases.push(po);
+  setData('purchases', purchases);
+
+  closeModal('modal-purchase');
+  renderPurchases();
+  showToast(t('save'));
+}
+
+// ── Receive Goods ──
+let receivingPOId = null;
+
+function openReceiveModal(poId) {
+  receivingPOId = poId;
+  const po = getData('purchases').find(p => p.id === poId);
+  const items = getData('items');
+  const body = document.getElementById('receive-body');
+
+  body.innerHTML = `
+    <p style="margin-bottom:14px">${t('po')}: #${po.id} &nbsp;|&nbsp; ${t('date')}: ${fmtDate(po.date)}</p>
+    <table>
+      <thead><tr><th>${t('item')}</th><th>${t('qty_received')}</th><th>${t('cost')}</th></tr></thead>
+      <tbody>
+        ${po.lines.map((l, idx) => {
+          const item = items.find(i => i.id === l.itemId);
+          return `<tr>
+            <td>${item ? (lang === 'ar' ? item.nameAr : item.nameEn || item.nameAr) : l.itemId}</td>
+            <td><input id="recv-qty-${idx}" type="number" value="${l.qty}" min="0" style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px"></td>
+            <td>${fmtMoney(l.cost)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+  openModal('modal-receive');
+}
+
+function confirmReceive() {
+  const po = getData('purchases').find(p => p.id === receivingPOId);
+  const batches = getData('batches');
+  const receiveDate = today();
+
+  po.lines.forEach((line, idx) => {
+    const qtyEl = document.getElementById(`recv-qty-${idx}`);
+    const qty = parseFloat(qtyEl?.value) || 0;
+    if (qty > 0) {
+      batches.push({
+        id: nextId(batches),
+        itemId: line.itemId,
+        purchaseId: po.id,
+        date: receiveDate,
+        qty, remaining: qty,
+        cost: line.cost
+      });
+    }
+  });
+
+  setData('batches', batches);
+  po.status = 'received';
+  setData('purchases', getData('purchases').map(p => p.id === po.id ? po : p));
+
+  closeModal('modal-receive');
+  renderPurchases();
+  showToast(t('receive'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INVENTORY
+// ═══════════════════════════════════════════════════════════════
+function renderInventory() {
+  const batches = getData('batches');
+  const items = getData('items');
+  const tbody = document.getElementById('inventory-tbody');
+  if (!batches.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('no_data')}</td></tr>`; return; }
+  tbody.innerHTML = batches.map(b => {
+    const item = items.find(i => i.id === b.itemId);
+    return `<tr>
+      <td>${item ? (lang === 'ar' ? item.nameAr : item.nameEn || item.nameAr) : '–'}</td>
+      <td>${fmtDate(b.date)}</td>
+      <td>#${b.purchaseId}</td>
+      <td>${b.qty}</td>
+      <td>${b.remaining}</td>
+      <td>${fmtMoney(b.cost)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SALES ORDERS
+// ═══════════════════════════════════════════════════════════════
+function renderSales() {
+  const sales = getData('sales');
+  const customers = getData('customers');
+
+  // Auto-cancel expired reservations
+  let changed = false;
+  sales.forEach(so => {
+    if (so.status === 'reserved' && so.reservedAt) {
+      const expiry = so.reservedAt + 24 * 60 * 60 * 1000;
+      if (Date.now() > expiry) {
+        reverseFifoDeduct(so.deductions || []);
+        so.deductions = [];
+        so.status = 'cancelled';
+        changed = true;
+      }
+    }
+  });
+  if (changed) setData('sales', sales);
+
+  const tbody = document.getElementById('sales-tbody');
+  if (!sales.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${t('no_data')}</td></tr>`; return; }
+  tbody.innerHTML = [...sales].reverse().map(so => {
+    const cust = customers.find(c => c.id === so.customerId);
+    let resDisplay = '–';
+    if (so.status === 'reserved' && so.reservedAt) {
+      const remaining = so.reservedAt + 24 * 60 * 60 * 1000 - Date.now();
+      resDisplay = remaining > 0 ? `${Math.ceil(remaining/3600000)}h` : t('expired');
+    }
+    return `<tr>
+      <td>#${so.id}</td>
+      <td>${fmtDate(so.date)}</td>
+      <td>${cust ? (lang === 'ar' ? cust.nameAr : cust.nameEn || cust.nameAr) : '–'}</td>
+      <td>${fmtMoney(so.totalRevenue)}</td>
+      <td><span class="status status-${so.status}">${t(so.status)}</span></td>
+      <td>${resDisplay}</td>
+      <td class="no-print"><button class="btn btn-ghost btn-sm" onclick="openSaleDetail(${so.id})">${t('sale_detail')}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openSaleModal() {
+  const customers = getData('customers');
+  const items = getData('items');
+
+  const custSelect = document.getElementById('so-customer');
+  custSelect.innerHTML = customers.map(c => `<option value="${c.id}">${lang === 'ar' ? c.nameAr : c.nameEn || c.nameAr}</option>`).join('');
+
+  document.getElementById('so-date').value = today();
+  document.getElementById('so-lines').innerHTML = '';
+  document.getElementById('so-total').textContent = '0.00';
+  soLineCount = 0;
+
+  addSOLine();
+  openModal('modal-sale');
+}
+
+function addSOLine() {
+  const items = getData('items');
+  const id = ++soLineCount;
+  const div = document.createElement('div');
+  div.id = `so-line-${id}`;
+  div.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px';
+  div.innerHTML = `
+    <div class="form-group">
+      <label>${t('item')}</label>
+      <select onchange="calcSOTotal()">
+        ${items.map(i => {
+          const stock = getStock(i.id);
+          return `<option value="${i.id}">${lang === 'ar' ? i.nameAr : i.nameEn || i.nameAr} (${t('stock')}: ${stock})</option>`;
+        }).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>${t('qty')}</label>
+      <input type="number" min="1" value="1" onchange="calcSOTotal()">
+    </div>
+    <div class="form-group">
+      <label>${t('price')}</label>
+      <input type="number" min="0" step="0.01" value="0" onchange="calcSOTotal()">
+    </div>
+    <button class="btn btn-danger btn-sm" style="margin-bottom:0" onclick="document.getElementById('so-line-${id}').remove();calcSOTotal()">✕</button>
+  `;
+  document.getElementById('so-lines').appendChild(div);
+}
+
+function calcSOTotal() {
+  let total = 0;
+  document.querySelectorAll('#so-lines > div').forEach(row => {
+    const qty   = parseFloat(row.querySelectorAll('input')[0]?.value) || 0;
+    const price = parseFloat(row.querySelectorAll('input')[1]?.value) || 0;
+    total += qty * price;
+  });
+  document.getElementById('so-total').textContent = fmtMoney(total);
+}
+
+function saveSO() {
+  const customerId = parseInt(document.getElementById('so-customer').value);
+  const date = document.getElementById('so-date').value;
+  const lines = [];
+  let totalRevenue = 0;
+
+  document.querySelectorAll('#so-lines > div').forEach(row => {
+    const itemId = parseInt(row.querySelector('select').value);
+    const qty    = parseFloat(row.querySelectorAll('input')[0]?.value) || 0;
+    const price  = parseFloat(row.querySelectorAll('input')[1]?.value) || 0;
+    if (itemId && qty > 0) {
+      lines.push({ itemId, qty, price });
+      totalRevenue += qty * price;
+    }
+  });
+
+  if (!customerId || !lines.length) { showToast(t('no_data'), 'error'); return; }
+
+  const sales = getData('sales');
+  const so = { id: nextId(sales), customerId, date, lines, totalRevenue, totalCOGS: 0, status: 'draft', deductions: [] };
+  sales.push(so);
+  setData('sales', sales);
+
+  closeModal('modal-sale');
+  renderSales();
+  showToast(t('save'));
+}
+
+function openSaleDetail(soId) {
+  const sales = getData('sales');
+  const so = sales.find(s => s.id === soId);
+  const customers = getData('customers');
+  const items = getData('items');
+  const cust = customers.find(c => c.id === so.customerId);
+
+  const linesHtml = so.lines.map(l => {
+    const item = items.find(i => i.id === l.itemId);
+    return `<tr>
+      <td>${item ? (lang === 'ar' ? item.nameAr : item.nameEn || item.nameAr) : '–'}</td>
+      <td>${l.qty}</td>
+      <td>${fmtMoney(l.price)}</td>
+      <td>${fmtMoney(l.qty * l.price)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('sale-detail-body').innerHTML = `
+    <p><strong>${t('customer')}:</strong> ${cust ? (lang === 'ar' ? cust.nameAr : cust.nameEn || cust.nameAr) : '–'}</p>
+    <p><strong>${t('date')}:</strong> ${fmtDate(so.date)}</p>
+    <p><strong>${t('status')}:</strong> <span class="status status-${so.status}">${t(so.status)}</span></p>
+    <hr>
+    <table>
+      <thead><tr><th>${t('item')}</th><th>${t('qty')}</th><th>${t('price')}</th><th>${t('subtotal')}</th></tr></thead>
+      <tbody>${linesHtml}</tbody>
+    </table>
+    <hr>
+    <p style="text-align:left"><strong>${t('total')}:</strong> ${fmtMoney(so.totalRevenue)}</p>
+    ${so.totalCOGS ? `<p style="text-align:left"><strong>${t('cogs')}:</strong> ${fmtMoney(so.totalCOGS)}</p>` : ''}
+  `;
+
+  const footer = document.getElementById('sale-detail-footer');
+  footer.innerHTML = `<button class="btn btn-ghost" onclick="closeModal('modal-sale-detail')">${t('cancel')}</button>`;
+
+  if (so.status === 'draft') {
+    footer.innerHTML += `
+      <button class="btn btn-warn" onclick="advanceSale(${so.id},'pending')">${t('review')}</button>`;
+  }
+  if (so.status === 'pending') {
+    footer.innerHTML += `
+      <button class="btn btn-primary" onclick="advanceSale(${so.id},'reserved')">${t('reserve')}</button>`;
+  }
+  if (so.status === 'reserved') {
+    footer.innerHTML += `
+      <button class="btn btn-success" onclick="advanceSale(${so.id},'completed')">${t('complete_sale')}</button>`;
+  }
+  if (['draft','pending','reserved'].includes(so.status)) {
+    footer.innerHTML += `
+      <button class="btn btn-danger" onclick="advanceSale(${so.id},'cancelled')">${t('cancel_sale')}</button>`;
+  }
+
+  openModal('modal-sale-detail');
+}
+
+function advanceSale(soId, newStatus) {
+  const sales = getData('sales');
+  const so = sales.find(s => s.id === soId);
+  if (!so) return;
+
+  // FIFO deduction on reserve
+  if (newStatus === 'reserved') {
+    const deductions = [];
+    let ok = true;
+    for (const line of so.lines) {
+      const d = fifoDeduct(line.itemId, line.qty);
+      if (!d) { ok = false; break; }
+      deductions.push(...d);
+    }
+    if (!ok) { showToast(t('insufficient_stock'), 'error'); return; }
+    applyFifoDeduct(deductions);
+    so.deductions = deductions;
+    so.reservedAt = Date.now();
+
+    // Calc COGS
+    so.totalCOGS = deductions.reduce((sum, d) => sum + d.qty * d.cost, 0);
+  }
+
+  // Reverse deduction on cancel from reserved
+  if (newStatus === 'cancelled' && so.status === 'reserved') {
+    reverseFifoDeduct(so.deductions || []);
+    so.deductions = [];
+  }
+
+  // Update customer balance on complete
+  if (newStatus === 'completed') {
+    const customers = getData('customers');
+    const c = customers.find(x => x.id === so.customerId);
+    if (c) { c.balance = (c.balance || 0) + so.totalRevenue; setData('customers', customers); }
+  }
+
+  so.status = newStatus;
+  setData('sales', sales);
+  closeModal('modal-sale-detail');
+  renderSales();
+  showToast(t(newStatus === 'completed' ? 'completed' : 'save'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════════════════════════
+function renderReports() {
+  const fromEl = document.getElementById('report-from');
+  const toEl   = document.getElementById('report-to');
+  if (!fromEl.value) { fromEl.value = firstDayOfMonth(); }
+  if (!toEl.value)   { toEl.value   = today(); }
+
+  const from = fromEl.value;
+  const to   = toEl.value;
+
+  const sales = getData('sales').filter(s => s.status === 'completed' && s.date >= from && s.date <= to);
+  const revenue = sales.reduce((sum, s) => sum + (s.totalRevenue || 0), 0);
+  const cogs    = sales.reduce((sum, s) => sum + (s.totalCOGS    || 0), 0);
+  const profit  = revenue - cogs;
+
+  const customers = getData('customers');
+  const receivablesRows = customers.filter(c => (c.balance || 0) > 0)
+    .map(c => `<tr><td>${lang === 'ar' ? c.nameAr : c.nameEn || c.nameAr}</td><td>${fmtMoney(c.balance)}</td></tr>`)
+    .join('') || `<tr><td colspan="2" class="empty-state">${t('no_data')}</td></tr>`;
+
+  document.getElementById('reports-content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-label">${t('revenue')}</div>
+        <div class="stat-value">${fmtMoney(revenue)}</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">${t('cogs')}</div>
+        <div class="stat-value">${fmtMoney(cogs)}</div>
+      </div>
+      <div class="stat-card ${profit >= 0 ? 'green' : 'red'}">
+        <div class="stat-label">${t('gross_profit')}</div>
+        <div class="stat-value ${profit < 0 ? 'text-danger' : 'text-success'}">${fmtMoney(profit)}</div>
+      </div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-header">${t('pl_report')} (${from} → ${to})</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>${t('date')}</th><th>${t('customer')}</th><th>${t('revenue')}</th><th>${t('cogs')}</th><th>${t('gross_profit')}</th></tr></thead>
+          <tbody>
+            ${sales.length ? sales.map(s => {
+              const cust = customers.find(c => c.id === s.customerId);
+              const gp = (s.totalRevenue || 0) - (s.totalCOGS || 0);
+              return `<tr>
+                <td>#${s.id}</td><td>${fmtDate(s.date)}</td>
+                <td>${cust ? (lang === 'ar' ? cust.nameAr : cust.nameEn || cust.nameAr) : '–'}</td>
+                <td>${fmtMoney(s.totalRevenue)}</td>
+                <td>${fmtMoney(s.totalCOGS)}</td>
+                <td class="${gp >= 0 ? 'text-success' : 'text-danger'}">${fmtMoney(gp)}</td>
+              </tr>`;
+            }).join('') : `<tr><td colspan="6" class="empty-state">${t('no_data')}</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-header">${t('receivables')}</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>${t('customer')}</th><th>${t('customer_balance')}</th></tr></thead>
+          <tbody>${receivablesRows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ALERTS
+// ═══════════════════════════════════════════════════════════════
+function buildAlerts() {
+  const alerts = [];
+  const items = getData('items');
+  const now = Date.now();
+
+  items.forEach(item => {
+    const stock = getStock(item.id);
+    if (stock < item.minStock) {
+      alerts.push({ type: 'warn', icon: '⚠️', msg: `${t('low_stock')}: ${lang === 'ar' ? item.nameAr : item.nameEn || item.nameAr} (${stock}/${item.minStock})` });
+    }
+    if (item.expiry) {
+      const exp = new Date(item.expiry).getTime();
+      const diffDays = Math.ceil((exp - now) / 86400000);
+      if (diffDays < 0) {
+        alerts.push({ type: 'error', icon: '🚫', msg: `${t('expired')}: ${lang === 'ar' ? item.nameAr : item.nameEn || item.nameAr} (${fmtDate(item.expiry)})` });
+      } else if (diffDays <= 30) {
+        alerts.push({ type: 'warn', icon: '⏰', msg: `${t('near_expiry')}: ${lang === 'ar' ? item.nameAr : item.nameEn || item.nameAr} (${diffDays} ${lang === 'ar' ? 'يوم' : 'days'})` });
+      }
+    }
+  });
+
+  const sales = getData('sales');
+  sales.forEach(so => {
+    if (so.status === 'reserved' && so.reservedAt) {
+      const expiry = so.reservedAt + 24 * 60 * 60 * 1000;
+      const remaining = expiry - now;
+      if (remaining > 0 && remaining < 4 * 60 * 60 * 1000) {
+        alerts.push({ type: 'warn', icon: '🕐', msg: `${t('reserved')} #${so.id} ${lang === 'ar' ? 'ينتهي خلال' : 'expires in'} ${Math.ceil(remaining/3600000)}h` });
+      }
+    }
+  });
+
+  return alerts;
+}
+
+function buildAlertsHtml(short = false) {
+  const alerts = buildAlerts();
+  if (!alerts.length) return '';
+  const items = short ? alerts.slice(0, 3) : alerts;
+  return items.map(a => `
+    <div class="alert-item">
+      <span class="alert-icon">${a.icon}</span>
+      <span>${a.msg}</span>
+    </div>
+  `).join('');
+}
+
+function renderAlerts() {
+  const html = buildAlertsHtml();
+  document.getElementById('alerts-list').innerHTML = html ||
+    `<div class="empty-state"><div class="icon">✅</div>${t('no_alerts')}</div>`;
+}
+
+function updateAlertBadge() {
+  const count = buildAlerts().length;
+  const badge = document.getElementById('alert-badge');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function fmtMoney(n) { return (n || 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtDate(d)  { return d ? new Date(d).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB') : '–'; }
+function today()     { return new Date().toISOString().split('T')[0]; }
+function firstDayOfMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+}
+function getExpiryClass(expiry) {
+  const diff = Math.ceil((new Date(expiry).getTime() - Date.now()) / 86400000);
+  if (diff < 0) return 'text-danger';
+  if (diff <= 30) return 'text-danger';
+  return '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOTSTRAP
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', init);
+
+// Mobile menu toggle visibility
+window.addEventListener('resize', () => {
+  document.getElementById('menu-toggle').style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+});
+if (window.innerWidth <= 768) {
+  document.getElementById('menu-toggle').style.display = 'flex';
+}
+</script>
+</body>
+</html>

@@ -1,67 +1,262 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl" id="html-root">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نموذج تسجيل الدخول والتسجيل</title>
-    <style>
-        body {
-            background: linear-gradient(45deg, #f3ec78, #af4261);
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            direction: rtl;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfriGlobal – تسجيل الدخول</title>
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #1e429f;
+      --accent: #16a34a;
+      --bg: #f0f4ff;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --error: #dc2626;
+      --border: #cbd5e1;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1a56db 0%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-wrapper {
+      width: 100%;
+      max-width: 420px;
+    }
+    .lang-toggle {
+      text-align: left;
+      margin-bottom: 12px;
+    }
+    [dir="rtl"] .lang-toggle { text-align: right; }
+    .lang-btn {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background .2s;
+    }
+    .lang-btn:hover { background: rgba(255,255,255,0.25); }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+    .logo h1 {
+      font-size: 22px;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .logo p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,86,219,0.12);
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .2s, transform .1s;
+    }
+    .submit-btn:hover { opacity: 0.92; }
+    .submit-btn:active { transform: scale(0.98); }
+    .error-msg {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--error);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .error-msg.show { display: block; }
+    .demo-hint {
+      margin-top: 22px;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .demo-hint strong { color: var(--text); display: block; margin-bottom: 6px; }
+    .demo-hint code {
+      display: inline-block;
+      background: #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      color: #334155;
+    }
+    .demo-row { margin: 3px 0; }
+    @media (max-width: 480px) {
+      .card { padding: 28px 20px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>تسجيل الدخول</h1>
-        <form>
-            <input type="text" placeholder="البريد الإلكتروني" required>
-            <input type="password" placeholder="كلمة المرور" required>
-            <button type="submit">تسجيل الدخول</button>
-        </form>
-        <h1>التسجيل</h1>
-        <form>
-            <input type="text" placeholder="اسم المستخدم" required>
-            <input type="text" placeholder="البريد الإلكتروني" required>
-            <input type="password" placeholder="كلمة المرور" required>
-            <button type="submit">إنشاء حساب</button>
-        </form>
+  <div class="login-wrapper">
+    <div class="lang-toggle">
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">English</button>
     </div>
+    <div class="card">
+      <div class="logo">
+        <div class="logo-icon">🌍</div>
+        <h1 id="brand-name">AfriGlobal</h1>
+        <p id="brand-sub">نظام الإدارة المتكامل</p>
+      </div>
+      <div class="error-msg" id="error-msg">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label id="lbl-user">اسم المستخدم</label>
+          <input type="text" id="username" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label id="lbl-pass">كلمة المرور</label>
+          <input type="password" id="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="submit-btn" id="btn-login">تسجيل الدخول</button>
+      </form>
+      <div class="demo-hint">
+        <strong id="hint-title">بيانات الدخول التجريبية:</strong>
+        <div class="demo-row">👑 <code>admin</code> / <code>admin123</code></div>
+        <div class="demo-row">📊 <code>accountant</code> / <code>acc123</code></div>
+        <div class="demo-row">🛒 <code>procurement</code> / <code>proc123</code></div>
+        <div class="demo-row">📦 <code>warehouse</code> / <code>ware123</code></div>
+        <div class="demo-row">💼 <code>sales</code> / <code>sales123</code></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Language ──────────────────────────────────────────────────────────────
+    let currentLang = localStorage.getItem('ag_lang') || 'ar';
+    const T = {
+      ar: {
+        sub: 'نظام الإدارة المتكامل', user: 'اسم المستخدم', pass: 'كلمة المرور',
+        login: 'تسجيل الدخول', err: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+        hint: 'بيانات الدخول التجريبية:', langBtn: 'English'
+      },
+      en: {
+        sub: 'Integrated Management System', user: 'Username', pass: 'Password',
+        login: 'Sign In', err: 'Invalid username or password',
+        hint: 'Demo credentials:', langBtn: 'عربي'
+      }
+    };
+
+    function applyLang() {
+      const t = T[currentLang];
+      const isAr = currentLang === 'ar';
+      document.getElementById('html-root').setAttribute('lang', currentLang);
+      document.getElementById('html-root').setAttribute('dir', isAr ? 'rtl' : 'ltr');
+      document.getElementById('brand-sub').textContent = t.sub;
+      document.getElementById('lbl-user').textContent = t.user;
+      document.getElementById('lbl-pass').textContent = t.pass;
+      document.getElementById('btn-login').textContent = t.login;
+      document.getElementById('error-msg').textContent = t.err;
+      document.getElementById('hint-title').textContent = t.hint;
+      document.getElementById('lang-btn').textContent = t.langBtn;
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      localStorage.setItem('ag_lang', currentLang);
+      applyLang();
+    }
+
+    applyLang();
+
+    // ── Users & Roles ─────────────────────────────────────────────────────────
+    const USERS = [
+      { username: 'admin',       password: 'admin123', role: 'admin',       nameAr: 'مدير النظام',        nameEn: 'System Admin' },
+      { username: 'accountant',  password: 'acc123',   role: 'accountant',  nameAr: 'المحاسب',            nameEn: 'Accountant' },
+      { username: 'procurement', password: 'proc123',  role: 'procurement', nameAr: 'مسؤول المشتريات',   nameEn: 'Procurement Officer' },
+      { username: 'warehouse',   password: 'ware123',  role: 'warehouse',   nameAr: 'مسؤول المخزن',      nameEn: 'Warehouse Manager' },
+      { username: 'sales',       password: 'sales123', role: 'sales',       nameAr: 'مسؤول المبيعات',    nameEn: 'Sales Officer' },
+    ];
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    // Redirect if already logged in
+    const session = JSON.parse(localStorage.getItem('ag_session') || 'null');
+    if (session) window.location.href = 'dashboard.html';
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      const user = USERS.find(x => x.username === u && x.password === p);
+      if (!user) {
+        document.getElementById('error-msg').classList.add('show');
+        return;
+      }
+      document.getElementById('error-msg').classList.remove('show');
+      localStorage.setItem('ag_session', JSON.stringify({
+        username: user.username,
+        role: user.role,
+        nameAr: user.nameAr,
+        nameEn: user.nameEn,
+        loginTime: Date.now()
+      }));
+      localStorage.setItem('ag_lang', currentLang);
+      window.location.href = 'dashboard.html';
+    }
+  </script>
 </body>
 </html>
