@@ -973,6 +973,7 @@ const I18N = {
     revenue:'الإيرادات', cogs:'تكلفة البضاعة المباعة', gross_profit:'الربح الإجمالي',
     receivables:'الذمم المدينة', customer_balance:'رصيد العميل',
     no_data:'لا توجد بيانات', edit:'تعديل', delete:'حذف',
+    confirm_delete:'هل تريد الحذف؟', insufficient_stock:'مخزون غير كافٍ', no_alerts:'لا توجد تنبيهات',
   },
   en: {
     dashboard:'Dashboard', items:'Items', suppliers:'Suppliers', customers:'Customers',
@@ -999,6 +1000,7 @@ const I18N = {
     revenue:'Revenue', cogs:'COGS', gross_profit:'Gross Profit',
     receivables:'Receivables', customer_balance:'Customer Balance',
     no_data:'No data found', edit:'Edit', delete:'Delete',
+    confirm_delete:'Are you sure you want to delete?', insufficient_stock:'Insufficient stock', no_alerts:'No alerts',
   }
 };
 
@@ -1355,7 +1357,7 @@ function saveItem() {
 }
 
 function deleteItem(id) {
-  if (!confirm('هل تريد الحذف؟')) return;
+  if (!confirm(t('confirm_delete'))) return;
   setData('items', getData('items').filter(i => i.id !== id));
   renderItems();
   showToast(t('delete'), 'warn');
@@ -1423,7 +1425,7 @@ function saveSupplier() {
 }
 
 function deleteSupplier(id) {
-  if (!confirm('هل تريد الحذف؟')) return;
+  if (!confirm(t('confirm_delete'))) return;
   setData('suppliers', getData('suppliers').filter(s => s.id !== id));
   renderSuppliers();
   showToast(t('delete'), 'warn');
@@ -1491,7 +1493,7 @@ function saveCustomer() {
 }
 
 function deleteCustomer(id) {
-  if (!confirm('هل تريد الحذف؟')) return;
+  if (!confirm(t('confirm_delete'))) return;
   setData('customers', getData('customers').filter(c => c.id !== id));
   renderCustomers();
   showToast(t('delete'), 'warn');
@@ -1873,7 +1875,7 @@ function advanceSale(soId, newStatus) {
       if (!d) { ok = false; break; }
       deductions.push(...d);
     }
-    if (!ok) { showToast('مخزون غير كافٍ', 'error'); return; }
+    if (!ok) { showToast(t('insufficient_stock'), 'error'); return; }
     applyFifoDeduct(deductions);
     so.deductions = deductions;
     so.reservedAt = Date.now();
@@ -2025,7 +2027,7 @@ function buildAlertsHtml(short = false) {
 function renderAlerts() {
   const html = buildAlertsHtml();
   document.getElementById('alerts-list').innerHTML = html ||
-    `<div class="empty-state"><div class="icon">✅</div>${lang === 'ar' ? 'لا توجد تنبيهات' : 'No alerts'}</div>`;
+    `<div class="empty-state"><div class="icon">✅</div>${t('no_alerts')}</div>`;
 }
 
 function updateAlertBadge() {
