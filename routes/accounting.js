@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 // In-memory storage for transactions
-a let transactions = [];
+let transactions = [];
 
 // Get all transactions
 router.get('/transactions', (req, res) => {
